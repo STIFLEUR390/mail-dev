@@ -8,22 +8,36 @@
 </template>
 
 <script setup>
-import {onMounted} from 'vue';
+import {onMounted, watch} from 'vue';
 import {listen} from '@tauri-apps/api/event';
 import {invoke} from '@tauri-apps/api/core';
 import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-apps/plugin-notification';
+import {useI18n} from 'vue-i18n';
 import Sidebar from './components/Sidebar.vue';
 import {useMailboxStore} from './stores/mailbox';
 import {useSettingStore} from './stores/setting';
 import {initDb, saveSettings} from './stores/db';
 import {check} from '@tauri-apps/plugin-updater';
+import {useTheme} from './composables/useTheme';
 
+const {t, locale} = useI18n();
 const mailbox = useMailboxStore();
 const setting = useSettingStore();
+useTheme();
+
+// Keep the i18n locale and document language in sync with the persisted setting.
+watch(
+  () => setting.locale,
+  (value) => {
+    locale.value = value;
+    document.documentElement.lang = value;
+  },
+  {immediate: true}
+);
 
 function notify(body = '') {
   sendNotification({
-    title: "Mail-Dev: Mail Received",
+    title: t('app.mailReceived'),
     body,
   });
 }
@@ -51,7 +65,7 @@ onMounted(async () => {
     try {
       const update = await check();
       if (update) {
-        notify(`Update ${update.version} available - open Settings to install.`);
+        notify(t('app.updateAvailable', {version: update.version}));
       }
     } catch (err) {
       // Offline, not a Tauri build, or updater not configured: ignore.

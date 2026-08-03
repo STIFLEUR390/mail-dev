@@ -16,7 +16,7 @@
   <div v-else-if="tab === 'HTML'" class="h-full w-full scroll overflow-y-auto">
     <!-- Untrusted email HTML: sandboxed without allow-scripts/allow-same-origin (no JS,
          opaque origin) so a malicious email cannot run code or access the app. -->
-    <iframe id="previewIframe" title="Letter preview" sandbox="allow-popups allow-popups-to-escape-sandbox"
+    <iframe id="previewIframe" :title="t('mailContent.previewTitle')" sandbox="allow-popups allow-popups-to-escape-sandbox"
             :src="htmlSrc" class="w-full h-full"></iframe>
   </div>
 
@@ -27,11 +27,11 @@
   <div v-else-if="tab === 'Spam Reports'" class="p-4 text-sm text-zinc-700 dark:text-zinc-300">
     <div v-if="spamError" class="flex items-center gap-2 text-red-600 dark:text-red-400">
       <PhWarningCircle :size="18"/>
-      <span>Spam check failed: {{ spamError }}</span>
+      <span>{{ t('mailContent.spamFailed', {error: spamError}) }}</span>
     </div>
 
     <!-- Loading skeleton matching the score card + table shape -->
-    <div v-else-if="mail.spam_score === ''" class="animate-pulse" role="status" aria-label="Loading spam score">
+    <div v-else-if="mail.spam_score === ''" class="animate-pulse" role="status" :aria-label="t('mailContent.spamLoading')">
       <div class="h-6 w-64 bg-zinc-200 dark:bg-zinc-700 rounded-md mb-2"></div>
       <div class="h-4 w-96 max-w-full bg-zinc-200 dark:bg-zinc-700 rounded mb-5"></div>
       <div class="h-3 w-24 bg-zinc-200 dark:bg-zinc-700 rounded mb-3"></div>
@@ -40,16 +40,16 @@
 
     <template v-else>
       <div class="flex items-center gap-2 mb-1">
-        <h1 class="font-semibold text-zinc-900 dark:text-zinc-50">Your SpamAssassin score is</h1>
+        <h1 class="font-semibold text-zinc-900 dark:text-zinc-50">{{ t('mailContent.spamScoreLabel') }}</h1>
         <span class="rounded-md bg-emerald-600 text-white px-2 py-0.5 font-mono font-semibold text-sm">{{ mail.spam_score }}</span>
       </div>
-      <p class="mb-4 text-sm text-zinc-500 dark:text-zinc-400">The lower your score, the more likely your email is going to be received in your subscribers' inboxes.</p>
+      <p class="mb-4 text-sm text-zinc-500 dark:text-zinc-400">{{ t('mailContent.spamHint') }}</p>
       <div class="overflow-y-auto scroll border-t border-dashed border-zinc-200 dark:border-zinc-700 pt-3">
         <table class="w-full border-collapse">
           <thead>
             <tr class="text-zinc-400 dark:text-zinc-500">
-              <th class="uppercase text-[11px] tracking-wider font-semibold text-left pr-4 w-16">Score</th>
-              <th class="uppercase text-[11px] tracking-wider font-semibold text-left">Description</th>
+              <th class="uppercase text-[11px] tracking-wider font-semibold text-left pr-4 w-16">{{ t('mailContent.score') }}</th>
+              <th class="uppercase text-[11px] tracking-wider font-semibold text-left">{{ t('mailContent.description') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -68,7 +68,10 @@
 
 <script setup>
 import {computed} from 'vue';
+import {useI18n} from 'vue-i18n';
 import {PhWarningCircle} from '@phosphor-icons/vue';
+
+const {t} = useI18n();
 
 const props = defineProps({
   tab: {type: String, default: 'HTML'},

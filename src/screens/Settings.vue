@@ -1,21 +1,21 @@
 <template>
   <div class="h-full w-full text-zinc-700 dark:text-zinc-300 py-4 px-6 scroll overflow-y-auto">
-    <h2 class="text-lg font-semibold tracking-tight mb-4 text-zinc-900 dark:text-zinc-100">Settings</h2>
+    <h2 class="text-lg font-semibold tracking-tight mb-4 text-zinc-900 dark:text-zinc-100">{{ t('settings.title') }}</h2>
 
     <!-- SMTP configuration -->
     <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-5 py-4 mb-2">
-      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">SMTP configuration</h3>
+      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">{{ t('settings.smtpConfig') }}</h3>
       <div :class="`relative flex pb-2 ${setting.srvStatus === true ? 'opacity-60' : ''}`">
         <div v-if="setting.srvStatus === true" class="absolute w-full h-full bg-white/50 dark:bg-zinc-950/40 z-40"></div>
         <div class="mr-3 w-64">
-          <label for="ipAddress" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">IP Address</label>
+          <label for="ipAddress" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('settings.ipAddress') }}</label>
           <div class="mt-1">
             <input v-model="ipAddress" type="text" name="ipAddress" id="ipAddress"
                    class="block w-full sm:text-sm bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition-colors"/>
           </div>
         </div>
         <div class="mr-3 w-32">
-          <label for="port" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Port</label>
+          <label for="port" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('settings.port') }}</label>
           <div class="mt-1">
             <input v-model.number="port" type="text" name="port" id="port"
                    class="block w-full sm:text-sm bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition-colors font-mono"/>
@@ -31,11 +31,11 @@
                         : 'bg-emerald-600 hover:bg-emerald-500'
                     }`"
                     :disabled="setting.srvStatus === true">
-              Start Server
+              {{ t('settings.startServer') }}
             </button>
             <button v-if="setting.srvStatus === true" @click="stopServer" type="button"
                     class="inline-flex items-center px-3.5 py-2 text-sm font-medium rounded-lg text-white shadow-sm bg-red-600 hover:bg-red-500 transition-all active:scale-[0.98]">
-              Stop Server
+              {{ t('settings.stopServer') }}
             </button>
           </div>
         </div>
@@ -45,23 +45,23 @@
 
     <!-- SMTP Authentication -->
     <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-5 py-4 mb-2">
-      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">SMTP Authentication</h3>
+      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">{{ t('settings.auth') }}</h3>
       <div class="relative flex flex-wrap items-start pb-2 gap-y-3">
         <div class="mr-3 w-48">
           <div class="flex items-center gap-2 pt-1">
-            <SwitchToggle v-model="setting.srvAuthEnabled" label="Enable AUTH (PLAIN/LOGIN)"/>
-            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-tight">Enable AUTH (PLAIN/LOGIN)</label>
+            <SwitchToggle v-model="setting.srvAuthEnabled" :label="t('settings.authEnable')"/>
+            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-tight">{{ t('settings.authEnable') }}</label>
           </div>
         </div>
         <div class="mr-3 w-56">
-          <label for="srvUsername" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Username</label>
+          <label for="srvUsername" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('settings.username') }}</label>
           <div class="mt-1">
             <input v-model="srvUsername" type="text" autoComplete="none" autoCorrect="none" name="srvUsername" id="srvUsername"
                    class="block w-full sm:text-sm bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition-colors"/>
           </div>
         </div>
         <div class="w-56">
-          <label for="srvPassword" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Password</label>
+          <label for="srvPassword" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('settings.password') }}</label>
           <div class="mt-1">
             <input v-model="srvPassword" type="password" @focus="e => e.target.type = 'text'" @blur="e => e.target.type = 'password'"
                    autoComplete="none" autoCorrect="none" name="srvPassword" id="srvPassword"
@@ -69,16 +69,16 @@
           </div>
         </div>
       </div>
-      <p class="text-xs text-zinc-500 dark:text-zinc-400">When enabled, clients must authenticate with AUTH PLAIN/LOGIN before sending mail. Credentials travel in plaintext. Only use this on localhost for testing.</p>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ t('settings.authHelper') }}</p>
     </section>
 
     <!-- Updates -->
     <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-5 py-4 mb-2">
-      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">Updates</h3>
+      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">{{ t('settings.updates') }}</h3>
       <div class="relative flex items-center pb-2">
         <button @click="checkForUpdates" type="button"
                 class="inline-flex items-center px-3.5 py-2 text-sm font-medium rounded-lg text-white shadow-sm bg-zinc-800 hover:bg-zinc-700 dark:bg-zinc-700 dark:hover:bg-zinc-600 transition-all active:scale-[0.98]">
-          Check for updates
+          {{ t('settings.checkUpdates') }}
         </button>
         <div class="ml-3 text-sm text-zinc-600 dark:text-zinc-400">{{ updateStatus }}</div>
       </div>
@@ -86,14 +86,14 @@
 
     <!-- Forward emails -->
     <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-5 py-4 mb-2">
-      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">Forward emails</h3>
+      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">{{ t('settings.forward') }}</h3>
       <div class="flex items-center gap-2 pb-3">
-        <SwitchToggle v-model="setting.forwardEnabled" label="Enable Forwarding"/>
-        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Enable Forwarding</label>
+        <SwitchToggle v-model="setting.forwardEnabled" :label="t('settings.enableForwarding')"/>
+        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('settings.enableForwarding') }}</label>
       </div>
       <div class="relative flex flex-wrap pb-2 gap-y-3">
         <div class="mr-3 w-48 xl:w-64">
-          <label for="forwardEmailHost" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Host</label>
+          <label for="forwardEmailHost" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('settings.host') }}</label>
           <div class="mt-1">
             <input v-model="forwardEmailHost" type="text" autoComplete="none" autoCorrect="none" name="forwardEmailHost" id="forwardEmailHost"
                    class="block w-full sm:text-sm bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition-colors"/>
@@ -101,7 +101,7 @@
         </div>
 
         <div class="mr-3 w-20 xl:w-28">
-          <label for="forwardEmailPort" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Port</label>
+          <label for="forwardEmailPort" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('settings.port') }}</label>
           <div class="mt-1">
             <input v-model="forwardEmailPort" type="text" autoComplete="none" autoCorrect="none" name="forwardEmailPort" id="forwardEmailPort"
                    class="block w-full sm:text-sm bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition-colors font-mono"/>
@@ -109,7 +109,7 @@
         </div>
 
         <div class="mr-3 w-40 xl:w-56">
-          <label for="forwardEmailUsername" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Username</label>
+          <label for="forwardEmailUsername" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('settings.username') }}</label>
           <div class="mt-1">
             <input v-model="forwardEmailUsername" type="text" autoComplete="none" autoCorrect="none" name="forwardEmailUsername" id="forwardEmailUsername"
                    class="block w-full sm:text-sm bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition-colors"/>
@@ -117,7 +117,7 @@
         </div>
 
         <div class="mr-3 w-36 xl:w-56">
-          <label for="forwardEmailPassword" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Password</label>
+          <label for="forwardEmailPassword" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('settings.password') }}</label>
           <div class="mt-1">
             <input v-model="forwardEmailPassword" type="password" @focus="e => e.target.type = 'text'" @blur="e => e.target.type = 'password'"
                    autoComplete="none" autoCorrect="none" name="forwardEmailPassword" id="forwardEmailPassword"
@@ -129,26 +129,26 @@
 
     <!-- Spam checking -->
     <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-5 py-4 mb-2">
-      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">Spam checking</h3>
+      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">{{ t('settings.spamChecking') }}</h3>
       <div class="relative flex items-center gap-2 pb-2">
-        <SwitchToggle v-model="setting.spamChecking" label="Check spam score with SpamAssassin (postmarkapp.com)"/>
-        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"> Check spam score with SpamAssassin (postmarkapp.com) </label>
+        <SwitchToggle v-model="setting.spamChecking" :label="t('settings.spamCheckLabel')"/>
+        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"> {{ t('settings.spamCheckLabel') }} </label>
       </div>
     </section>
 
     <!-- Show Notifications -->
     <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-5 py-4 mb-2">
-      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">Show Notifications</h3>
+      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">{{ t('settings.showNotifications') }}</h3>
       <div class="relative flex items-center gap-2 pb-2">
-        <SwitchToggle v-model="setting.useNotification" label="Show notifications when an email is received"/>
-        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"> Show notifications when an email is received </label>
+        <SwitchToggle v-model="setting.useNotification" :label="t('settings.notificationsLabel')"/>
+        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"> {{ t('settings.notificationsLabel') }} </label>
       </div>
     </section>
 
     <!-- Framework configuration -->
     <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-5 py-4 mb-4">
       <div>
-        <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">Framework configuration</h3>
+        <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">{{ t('settings.framework') }}</h3>
         <select v-model="framework"
                 class="mt-1 block w-full xl:w-96 px-3 py-2 text-sm bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-colors">
           <optgroup label="PHP">
@@ -183,13 +183,13 @@
       </div>
 
       <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400 border-b border-dashed border-zinc-200 dark:border-zinc-700">
-        If you are using Vagrant/Homestead, use <span class="font-semibold font-mono">"10.0.2.2"</span> as your SMTP-Host.<br/>
-        For Docker, use <span class="font-semibold font-mono">"host.docker.internal"</span> as your SMTP-Host.
+        {{ t('settings.vagrantHint', {ip: '"10.0.2.2"'}) }}<br/>
+        {{ t('settings.dockerHint', {ip: '"host.docker.internal"'}) }}
       </p>
 
       <div v-if="framework === 'Laravel 13'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Use these configuration values in your Laravel 13 application .env file (also valid for 11/12):
+          {{ t('settings.intro.laravel') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -204,7 +204,7 @@ MAIL_ENCRYPTION=null` }}
 
       <div v-else-if="framework === 'Symfony 8'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Symfony 8 uses the Mailer component. Set the DSN in your .env file:
+          {{ t('settings.intro.symfony') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -214,7 +214,7 @@ MAIL_ENCRYPTION=null` }}
 
       <div v-else-if="framework === 'WordPress'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          You can configure your WordPress site to send mails to Mail-Dev by adding this to your theme's functions.php:
+          {{ t('settings.intro.wordpress') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -231,7 +231,7 @@ add_action('phpmailer_init', 'mail_dev');` }}
 
       <div v-else-if="framework === 'Yii 3'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Yii 3 uses yiisoft/mailer with the Symfony Mailer adapter. Configure the transport DSN in config/params.php:
+          {{ t('settings.intro.yii') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -249,7 +249,7 @@ add_action('phpmailer_init', 'mail_dev');` }}
 
       <div v-else-if="framework === 'PHPMailer 7'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Standalone PHP library v7 (composer require phpmailer/phpmailer):
+          {{ t('settings.intro.phpmailer') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -271,7 +271,7 @@ $mail->send();` }}
 
       <div v-else-if="framework === 'CodeIgniter 4'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Add these values to your .env file:
+          {{ t('settings.intro.codeigniter') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -284,7 +284,7 @@ email.SMTPAuth = false` }}
 
       <div v-else-if="framework === 'Nodemailer 9'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Nodemailer 9 is an easy to use module to send e-mails with Node.JS:<br/>
+          {{ t('settings.intro.nodemailer') }}<br/>
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -306,7 +306,7 @@ await transport.sendMail({
 
       <div v-else-if="framework === 'Django 6'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Add these settings to your Django 6 settings.py:
+          {{ t('settings.intro.django') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -319,7 +319,7 @@ EMAIL_USE_TLS = False` }}
 
       <div v-else-if="framework === 'Flask-Mail'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Add these settings to your Flask app config (pip install Flask-Mail):
+          {{ t('settings.intro.flask') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -332,7 +332,7 @@ app.config['MAIL_USE_SSL'] = False` }}
 
       <div v-else-if="framework === 'Ruby on Rails 8'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          In config/environments/*.rb specify ActionMailer defaults for your development or staging servers (Rails 8):
+          {{ t('settings.intro.rails') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -347,7 +347,7 @@ config.action_mailer.smtp_settings = {
 
       <div v-else-if="framework === 'Ruby (net/smtp)'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Sending email using net/smtp from Ruby stdlib:
+          {{ t('settings.intro.rubySmtp') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -372,7 +372,7 @@ end` }}
 
       <div v-else-if="framework === 'Spring Boot 4'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Add these properties to your Spring Boot 4 application.properties:
+          {{ t('settings.intro.spring') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -387,7 +387,7 @@ spring.mail.properties.mail.smtp.starttls.enable=false` }}
 
       <div v-else-if="framework === '.NET 10 (ASP.NET Core)'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Add this to appsettings.json, then use SmtpClient (System.Net.Mail, .NET 10):
+          {{ t('settings.intro.dotnet') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -397,7 +397,7 @@ spring.mail.properties.mail.smtp.starttls.enable=false` }}
 }` }}
         </code>
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          C# example:
+          {{ t('settings.intro.dotnetCs') }}
         </p>
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
           {{ `using var client = new SmtpClient("${ipAddress}", ${port});
@@ -408,7 +408,7 @@ await client.SendMailAsync("from@example.com",
 
       <div v-else-if="framework === 'Go (net/smtp)'" class="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Send mail using the standard library:
+          {{ t('settings.intro.go') }}
         </p>
 
         <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
@@ -436,6 +436,7 @@ func main() {
 <script setup>
 import {ref} from 'vue';
 import {storeToRefs} from 'pinia';
+import {useI18n} from 'vue-i18n';
 import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-apps/plugin-notification';
 import {check} from '@tauri-apps/plugin-updater';
 import {relaunch} from '@tauri-apps/plugin-process';
@@ -444,6 +445,7 @@ import {useSmtpServer} from '../composables/useSmtpServer';
 import SwitchToggle from '../components/SwitchToggle.vue';
 
 const setting = useSettingStore();
+const {t} = useI18n();
 const {startServer, stopServer} = useSmtpServer();
 const {
   ipAddress,
@@ -459,8 +461,8 @@ const {
 
 function notify() {
   sendNotification({
-    title: "Mail-Dev: SMTP Connection",
-    body: "SMTP server started successfully",
+    title: t('app.smtpConnection'),
+    body: t('app.smtpStartedBody'),
   });
 }
 
@@ -484,25 +486,25 @@ async function startServerClick() {
 const updateStatus = ref('');
 
 async function checkForUpdates() {
-  updateStatus.value = 'Checking for updates...';
+  updateStatus.value = t('settings.checkingUpdates');
   try {
     const update = await check();
     if (!update) {
-      updateStatus.value = 'You are up to date!';
+      updateStatus.value = t('settings.upToDate');
       return;
     }
-    updateStatus.value = `Update ${update.version} available. Downloading...`;
+    updateStatus.value = t('settings.updateAvailable', {version: update.version});
     await update.downloadAndInstall((event) => {
       if (event.event === 'Started') {
-        updateStatus.value = 'Downloading update...';
+        updateStatus.value = t('settings.downloadingUpdate');
       }
       if (event.event === 'Finished') {
-        updateStatus.value = 'Download finished. Restarting...';
+        updateStatus.value = t('settings.downloadFinished');
       }
     });
     await relaunch();
   } catch (err) {
-    updateStatus.value = `Update check failed: ${err}`;
+    updateStatus.value = t('settings.updateFailed', {error: err});
     console.error(err);
   }
 }

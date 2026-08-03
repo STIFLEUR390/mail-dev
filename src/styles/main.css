@@ -51,8 +51,12 @@
   font-display: swap;
 }
 
-:root {
-  color-scheme: light dark;
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 html,
@@ -97,11 +101,9 @@ pre,
 .scroll::-webkit-scrollbar-thumb:hover {
   background-color: rgb(161 161 170 / 0.55);
 }
-@media (prefers-color-scheme: dark) {
-  .scroll::-webkit-scrollbar-thumb {
+html.dark .scroll::-webkit-scrollbar-thumb {
     background-color: rgb(113 113 122 / 0.45);
-  }
-  .scroll::-webkit-scrollbar-thumb:hover {
+}
+html.dark .scroll::-webkit-scrollbar-thumb:hover {
     background-color: rgb(113 113 122 / 0.65);
-  }
 }

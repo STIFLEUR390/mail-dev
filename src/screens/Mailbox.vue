@@ -4,19 +4,19 @@
     <div class="text-zinc-300 dark:text-zinc-700 mb-4">
       <PhEnvelopeSimpleOpen :size="72" weight="light"/>
     </div>
-    <div class="font-semibold text-zinc-500 dark:text-zinc-400 mb-2">No mail to show!</div>
-    <div class="text-sm text-zinc-500 dark:text-zinc-400 mb-3">Send emails using this smtp server:</div>
+    <div class="font-semibold text-zinc-500 dark:text-zinc-400 mb-2">{{ t('mailbox.emptyTitle') }}</div>
+    <div class="text-sm text-zinc-500 dark:text-zinc-400 mb-3">{{ t('mailbox.emptyHint') }}</div>
     <div class="flex items-center gap-3 mb-2">
       <div class="font-mono text-sm bg-zinc-900 dark:bg-zinc-800 text-zinc-200 dark:text-zinc-100 rounded-lg px-3 py-1.5 shadow-inner">{{ setting.ipAddress }}:{{ setting.port }}</div>
       <button v-if="!setting.srvStatus" @click="startServer"
               class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2 cursor-pointer transition-colors"
-              aria-label="Start SMTP server">
-        Start Server
+              :aria-label="t('mailbox.startServer')">
+        {{ t('mailbox.startServer') }}
       </button>
       <button v-else @click="stopServer"
               class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline underline-offset-2 cursor-pointer transition-colors"
-              aria-label="Stop SMTP server">
-        Stop Server
+              :aria-label="t('mailbox.stopServer')">
+        {{ t('mailbox.stopServer') }}
       </button>
     </div>
     <div v-if="setting.srvResponseMessage" class="text-xs text-red-600 dark:text-red-400 font-medium">{{ setting.srvResponseMessage }}</div>
@@ -27,10 +27,10 @@
     <!-- List -->
     <div class="h-full flex-shrink-0 w-64 lg:w-80 xl:w-96 border-r border-zinc-200 dark:border-zinc-800 scroll overflow-y-auto">
       <div class="py-2 px-2 flex items-center justify-end border-b border-zinc-200 dark:border-zinc-800">
-        <button @click="clearAllMails" aria-label="Delete all mails"
+        <button @click="clearAllMails" :aria-label="t('mailbox.deleteAll')"
                 class="flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
           <PhTrash :size="16"/>
-          Delete all mails
+          {{ t('mailbox.deleteAll') }}
         </button>
       </div>
       <div v-for="mail in mailbox.mails" :key="mail.key">
@@ -50,19 +50,19 @@
 
     <!-- Detail -->
     <div v-if="mailbox.mailIndex !== null" class="flex flex-col h-full bg-zinc-50 dark:bg-zinc-950 w-full px-6 py-4">
-      <div class="text-xl font-semibold tracking-tight pt-1 pb-4 text-zinc-900 dark:text-zinc-100 break-words">{{ mailbox.mail.subject || 'Subject' }}</div>
+      <div class="text-xl font-semibold tracking-tight pt-1 pb-4 text-zinc-900 dark:text-zinc-100 break-words">{{ mailbox.mail.subject || t('mailbox.subject') }}</div>
 
       <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900 px-4 py-2.5 mb-2">
         <div v-if="mailbox.mail.from" class="grid grid-cols-[110px_1fr] gap-x-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0">
-          <div class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 font-medium pt-0.5">From</div>
+          <div class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 font-medium pt-0.5">{{ t('mailbox.from') }}</div>
           <div class="text-sm font-mono text-zinc-700 dark:text-zinc-300 break-all">{{ mailbox.mail.from }}</div>
         </div>
         <div class="grid grid-cols-[110px_1fr] gap-x-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0">
-          <div class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 font-medium pt-0.5">To</div>
+          <div class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 font-medium pt-0.5">{{ t('mailbox.to') }}</div>
           <div class="text-sm font-mono text-zinc-700 dark:text-zinc-300 break-all">{{ mailbox.mail.to || '' }}</div>
         </div>
         <div class="grid grid-cols-[110px_1fr] gap-x-3 py-1.5 last:border-b-0">
-          <div class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 font-medium pt-0.5">Message-ID</div>
+          <div class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 font-medium pt-0.5">{{ t('mailbox.messageId') }}</div>
           <div class="text-sm font-mono text-zinc-500 dark:text-zinc-400 break-all">{{ mailbox.mail.message_id || '' }}</div>
         </div>
       </div>
@@ -81,16 +81,16 @@
           <div v-for="item in tabs" :key="item" :class="tabClass(item)" @click="tab = item" role="tab"
                :aria-selected="tab === item" :tabindex="tab === item ? 0 : -1">
             <template v-if="item === 'Spam Reports' && mailbox.mail.spam_score !== ''">
-              {{ item }}
+              {{ item === 'Spam Reports' ? t('mailbox.spamReportsTab') : item }}
               <div :class="`ml-1.5 rounded px-1.5 text-xs flex justify-center items-center font-semibold ${tab === item ? 'bg-emerald-600 text-white' : 'bg-zinc-400 text-white dark:bg-zinc-600'}`">{{ mailbox.mail.spam_score }}</div>
             </template>
             <template v-else>{{ item }}</template>
           </div>
         </div>
-        <button @click="deleteSelected" aria-label="Delete selected mail"
+        <button @click="deleteSelected" :aria-label="t('mailbox.delete')"
                 class="ml-auto flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
           <PhTrash :size="16"/>
-          Delete
+          {{ t('mailbox.delete') }}
         </button>
       </div>
 
@@ -103,13 +103,14 @@
       <div class="text-zinc-300 dark:text-zinc-700 mb-3">
         <PhEnvelopeSimpleOpen :size="72" weight="light"/>
       </div>
-      <div class="font-semibold">Select a mail!</div>
+      <div class="font-semibold">{{ t('mailbox.selectMail') }}</div>
     </div>
   </div>
 </template>
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {useI18n} from 'vue-i18n';
 import {PhEnvelopeSimpleOpen, PhPaperclip, PhCaretRight, PhTrash} from '@phosphor-icons/vue';
 import {fetch} from '@tauri-apps/plugin-http';
 import {ask, save} from '@tauri-apps/plugin-dialog';
@@ -122,6 +123,7 @@ import {useSmtpServer} from '../composables/useSmtpServer';
 const mailbox = useMailboxStore();
 const setting = useSettingStore();
 const {startServer, stopServer} = useSmtpServer();
+const {t} = useI18n();
 
 const tab = ref('HTML');
 const spamError = ref('');
@@ -184,13 +186,13 @@ async function confirmAction(message) {
 }
 
 async function clearAllMails() {
-  const ok = await confirmAction('Delete all mails? This cannot be undone.');
+  const ok = await confirmAction(t('mailbox.confirmClear'));
   if (ok) mailbox.clearMails();
 }
 
 async function deleteSelected() {
   if (mailbox.mailIndex === null) return;
-  const ok = await confirmAction('Delete this mail?');
+  const ok = await confirmAction(t('mailbox.confirmDelete'));
   if (ok) mailbox.deleteMail(mailbox.mailIndex);
 }
 
@@ -245,7 +247,7 @@ function getSpamScore(mail) {
 async function saveAttachment(attachment) {
   let path = await save({
     defaultPath: attachment[0],
-    filters: [{name: 'Save Attachment.', extensions: []}]
+    filters: [{name: t('mailbox.saveAttachment'), extensions: []}]
   });
 
   if (path !== null) {

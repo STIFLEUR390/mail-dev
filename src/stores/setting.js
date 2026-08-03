@@ -21,6 +21,9 @@ export const useSettingStore = defineStore('setting', {
     forwardEnabled: false,
 
     useNotification: true,
+
+    theme: 'system', // 'system' | 'light' | 'dark'
+    locale: (typeof navigator !== 'undefined' && navigator.language && navigator.language.toLowerCase().startsWith('fr')) ? 'fr' : 'en',
   }),
   actions: {
     async initFromDb() {
@@ -77,6 +80,12 @@ export const useSettingStore = defineStore('setting', {
     },
     setUseNotification(value) {
       this.useNotification = value;
+    },
+    setTheme(value) {
+      this.theme = value;
+    },
+    setLocale(value) {
+      this.locale = value;
     },
   },
 });
