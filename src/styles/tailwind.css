@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+/* Design tokens: type stack (self-hosted, no network dependency) */
+@theme {
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", "Cascadia Mono", monospace;
+}

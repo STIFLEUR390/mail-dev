@@ -28,6 +28,8 @@ Give it a try, [Download now](https://github.com/STIFLEUR390/mail-dev/releases).
 - [x] Error-proof parsing (no panics) + 8-bit MIME support
 - [x] Secure HTML preview (iframe sandbox hardening)
 - [x] Keyboard shortcuts (Delete, next/prev mail)
+- [x] Dark mode (follows system preference)
+- [x] Modern UI: Geist type stack, single accent color, Phosphor icons
 - [x] Forwarding: error feedback + timeouts
 - [x] Spam-check toggle wired up (Settings)
 - [x] Lazy-loaded routes + vendor code splitting

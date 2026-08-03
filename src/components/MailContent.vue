@@ -1,14 +1,14 @@
 <template>
   <!-- Raw -->
-  <div v-if="tab === 'Raw'" class="whitespace-pre-wrap p-2 text-sm font-sans text-gray-600">{{ mail.mime }}</div>
+  <div v-if="tab === 'Raw'" class="whitespace-pre-wrap p-4 text-[13px] font-mono leading-relaxed text-zinc-600 dark:text-zinc-300 break-words">{{ mail.mime }}</div>
 
   <!-- Text -->
-  <div v-else-if="tab === 'Text'" class="whitespace-pre-wrap p-2 text-sm font-sans text-gray-600">{{ mail.text }}</div>
+  <div v-else-if="tab === 'Text'" class="whitespace-pre-wrap p-4 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 break-words">{{ mail.text }}</div>
 
   <!-- Headers -->
-  <div v-else-if="tab === 'Headers'" class="whitespace-pre-wrap p-2 text-sm font-sans text-gray-600">
+  <div v-else-if="tab === 'Headers'" class="whitespace-pre-wrap p-4 text-[13px] font-mono leading-relaxed text-zinc-600 dark:text-zinc-300 break-words">
     <div v-for="(header, key) in mail.headers" :key="key">
-      <span class="font-semibold">{{ header[0] }}</span>: {{ header[1] }}
+      <span class="font-semibold text-zinc-800 dark:text-zinc-100">{{ header[0] }}</span>: {{ header[1] }}
     </div>
   </div>
 
@@ -21,27 +21,41 @@
   </div>
 
   <!-- HTML-Source -->
-  <div v-else-if="tab === 'HTML-Source'" class="whitespace-pre-wrap p-2 text-sm font-sans text-gray-600">{{ mail.html }}</div>
+  <div v-else-if="tab === 'HTML-Source'" class="whitespace-pre-wrap p-4 text-[13px] font-mono leading-relaxed text-zinc-600 dark:text-zinc-300 break-words">{{ mail.html }}</div>
 
   <!-- Spam Reports -->
-  <div v-else-if="tab === 'Spam Reports'" class="p-2 text-sm font-sans text-gray-600">
-    <div v-if="spamError" class="text-red-600">Spam check failed: {{ spamError }}</div>
-    <div v-else-if="mail.spam_score === ''">Loading...</div>
+  <div v-else-if="tab === 'Spam Reports'" class="p-4 text-sm text-zinc-700 dark:text-zinc-300">
+    <div v-if="spamError" class="flex items-center gap-2 text-red-600 dark:text-red-400">
+      <PhWarningCircle :size="18"/>
+      <span>Spam check failed: {{ spamError }}</span>
+    </div>
+
+    <!-- Loading skeleton matching the score card + table shape -->
+    <div v-else-if="mail.spam_score === ''" class="animate-pulse" role="status" aria-label="Loading spam score">
+      <div class="h-6 w-64 bg-zinc-200 dark:bg-zinc-700 rounded-md mb-2"></div>
+      <div class="h-4 w-96 max-w-full bg-zinc-200 dark:bg-zinc-700 rounded mb-5"></div>
+      <div class="h-3 w-24 bg-zinc-200 dark:bg-zinc-700 rounded mb-3"></div>
+      <div v-for="i in 5" :key="i" class="h-4 w-full bg-zinc-100 dark:bg-zinc-800 rounded mb-2"></div>
+    </div>
+
     <template v-else>
-      <h1 class="font-medium mb-1">Your SpamAssassin score is {{ mail.spam_score }}!</h1>
-      <p class="mb-3 text-sm text-gray-700">The lower your score, the more likely your email is going to be received in your subscribers' inboxes.</p>
-      <div class="h-100 overflow-y-auto scroll border-t-2 border-dashed border-gray-300 pt-2">
-        <table class="w-full border-collapse text-gray-700">
+      <div class="flex items-center gap-2 mb-1">
+        <h1 class="font-semibold text-zinc-900 dark:text-zinc-50">Your SpamAssassin score is</h1>
+        <span class="rounded-md bg-emerald-600 text-white px-2 py-0.5 font-mono font-semibold text-sm">{{ mail.spam_score }}</span>
+      </div>
+      <p class="mb-4 text-sm text-zinc-500 dark:text-zinc-400">The lower your score, the more likely your email is going to be received in your subscribers' inboxes.</p>
+      <div class="overflow-y-auto scroll border-t border-dashed border-zinc-200 dark:border-zinc-700 pt-3">
+        <table class="w-full border-collapse">
           <thead>
-            <tr class="text-gray-600 text-xs">
-              <th class="uppercase text-xs font-semibold text-left pr-4 w-16">Score</th>
-              <th class="uppercase text-xs font-semibold text-left">Description</th>
+            <tr class="text-zinc-400 dark:text-zinc-500">
+              <th class="uppercase text-[11px] tracking-wider font-semibold text-left pr-4 w-16">Score</th>
+              <th class="uppercase text-[11px] tracking-wider font-semibold text-left">Description</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(rule, index) in mail.spam_rules" :key="index" class="bg-gray-200 even:bg-gray-200/40 odd:bg-gray-200/20">
-              <td class="py-2 text-xs text-gray-900 font-mono text-right pr-4 font-semibold">{{ rule.score }}</td>
-              <td class="py-2 text-xs text-gray-500 font-mono">{{ rule.description }}</td>
+            <tr v-for="(rule, index) in mail.spam_rules" :key="index" class="border-b border-zinc-100 dark:border-zinc-800 last:border-b-0">
+              <td class="py-2 text-xs text-zinc-800 dark:text-zinc-200 font-mono text-right pr-4 font-semibold">{{ rule.score }}</td>
+              <td class="py-2 text-xs text-zinc-500 dark:text-zinc-400 font-mono">{{ rule.description }}</td>
             </tr>
           </tbody>
         </table>
@@ -54,6 +68,7 @@
 
 <script setup>
 import {computed} from 'vue';
+import {PhWarningCircle} from '@phosphor-icons/vue';
 
 const props = defineProps({
   tab: {type: String, default: 'HTML'},

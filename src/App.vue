@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen h-screen flex">
+  <div class="h-dvh flex overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
     <Sidebar/>
     <div class="w-full h-full">
       <RouterView/>
@@ -51,7 +51,7 @@ onMounted(async () => {
     try {
       const update = await check();
       if (update) {
-        notify(`Update ${update.version} available — open Settings to install.`);
+        notify(`Update ${update.version} available - open Settings to install.`);
       }
     } catch (err) {
       // Offline, not a Tauri build, or updater not configured: ignore.
