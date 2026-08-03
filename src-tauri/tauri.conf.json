@@ -70,6 +70,8 @@
         ],
         "displayLanguageSelector": true
       }
-    }
+    },
+    "license": "MIT",
+    "licenseFile": "../LICENSE"
   }
 }
