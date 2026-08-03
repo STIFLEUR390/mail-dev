@@ -156,7 +156,11 @@ function rowTextClass(mail) {
 }
 
 function startServer() {
-  invoke("start_smtp_server", {address: `${setting.ipAddress}:${setting.port}`}).then().catch();
+  invoke("start_smtp_server", {
+    address: `${setting.ipAddress}:${setting.port}`,
+    username: setting.srvAuthEnabled ? setting.srvUsername : "",
+    password: setting.srvAuthEnabled ? setting.srvPassword : "",
+  }).then().catch();
   setting.setSrvStatus(true);
 }
 

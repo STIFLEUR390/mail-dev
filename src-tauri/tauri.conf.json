@@ -30,12 +30,21 @@
   },
   "plugins": {
     "sql": {
-      "preload": ["sqlite:maildev.db"]
+      "preload": [
+        "sqlite:maildev.db"
+      ]
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY2MkVFQTg2RDVFREUwMjYKUldRbTRPM1ZodW91WnB3M0pHcloyUFFjc3RVZ1I1WXV1T3Y0OU9Yc05YMkFxSVpkOTJkc3grOWEK",
+      "endpoints": [
+        "https://github.com/STIFLEUR390/mail-dev/releases/latest/download/latest.json"
+      ]
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -55,7 +64,10 @@
       },
       "nsis": {
         "installMode": "currentUser",
-        "languages": ["English", "French"],
+        "languages": [
+          "English",
+          "French"
+        ],
         "displayLanguageSelector": true
       }
     }

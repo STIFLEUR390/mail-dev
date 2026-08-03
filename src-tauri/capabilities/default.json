@@ -20,6 +20,8 @@
     },
     "fs:default",
     "notification:default",
+    "updater:default",
+    "process:default",
     "sql:default",
     "sql:allow-execute"
   ]

@@ -46,12 +46,17 @@ pub fn run() {
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_notification::init())
+    .plugin(tauri_plugin_process::init())
     .plugin(
       tauri_plugin_sql::Builder::default()
         .add_migrations("sqlite:maildev.db", migrations())
         .build(),
     )
     .setup(|app| {
+      #[cfg(desktop)]
+      app
+        .handle()
+        .plugin(tauri_plugin_updater::Builder::new().build())?;
       let _s = window::main_window(app.get_webview_window("main"));
       Ok(())
     })

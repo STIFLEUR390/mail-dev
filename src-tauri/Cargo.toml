@@ -19,7 +19,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-mailin-embedded = { version = "0.8", features = ["rtls"] }
+mailin = "0.6"
 mailparse = "0.16"
 lettre = "0.11"
 tauri = { version = "2", features = ["macos-private-api"] }
@@ -28,9 +28,13 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-sql = { version = "2.4.0", features = ["sqlite"] }
+tauri-plugin-process = "2.3.1"
 
 [profile.release]
 lto = true
 strip = true
 codegen-units = 1
 panic = "abort"
+
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-updater = "2.10.1"

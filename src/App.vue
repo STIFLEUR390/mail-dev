@@ -16,6 +16,7 @@ import Sidebar from './components/Sidebar.vue';
 import {useMailboxStore} from './stores/mailbox';
 import {useSettingStore} from './stores/setting';
 import {initDb, saveSettings} from './stores/db';
+import {check} from '@tauri-apps/plugin-updater';
 
 const mailbox = useMailboxStore();
 const setting = useSettingStore();
@@ -39,6 +40,18 @@ onMounted(async () => {
   setting.$subscribe((_mutation, state) => {
     saveSettings(state);
   });
+
+  // Silent background update check: notify the user if a new release exists.
+  setTimeout(async () => {
+    try {
+      const update = await check();
+      if (update) {
+        notify(`Update ${update.version} available — open Settings to install.`);
+      }
+    } catch (err) {
+      // Offline, not a Tauri build, or updater not configured: ignore.
+    }
+  }, 5000);
 
   listen("mail-received", (res) => {
     mailbox.addMail(res.payload);

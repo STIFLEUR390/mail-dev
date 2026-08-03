@@ -34,6 +34,50 @@
       <div class="text-sm font-semibold">{{ setting.srvResponseMessage }}</div>
     </div>
 
+    <!-- SMTP Authentication -->
+    <div class="bg-white rounded-md px-4 py-2 border mb-2">
+      <h3 class="font-semibold mb-2">SMTP Authentication</h3>
+      <div class="relative flex flex-wrap pb-2">
+        <div class="mr-3 w-48">
+          <label for="srvAuthEnabled" class="block text-sm font-medium text-gray-700">Enable AUTH (PLAIN/LOGIN)</label>
+          <div class="mt-1">
+            <button @click="setting.setSrvAuthEnabled(!setting.srvAuthEnabled)" type="button"
+                    :class="`inline-flex items-center px-3 py-2.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 ${setting.srvAuthEnabled === true ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`">
+              {{ setting.srvAuthEnabled === true ? 'Disable Authentication' : 'Enable Authentication' }}
+            </button>
+          </div>
+        </div>
+        <div class="mr-3 w-56">
+          <label for="srvUsername" class="block text-sm font-medium text-gray-700">Username</label>
+          <div class="mt-1">
+            <input v-model="srvUsername" type="text" autoComplete="none" autoCorrect="none" name="srvUsername" id="srvUsername"
+                   class="shadow-sm focus:ring-gray-500/40 focus:ring-2 focus:border-gray-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+          </div>
+        </div>
+        <div class="w-56">
+          <label for="srvPassword" class="block text-sm font-medium text-gray-700">Password</label>
+          <div class="mt-1">
+            <input v-model="srvPassword" type="password" @focus="e => e.target.type = 'text'" @blur="e => e.target.type = 'password'"
+                   autoComplete="none" autoCorrect="none" name="srvPassword" id="srvPassword"
+                   class="shadow-sm focus:ring-gray-500/40 focus:ring-2 focus:border-gray-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+          </div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500">When enabled, clients must authenticate with AUTH PLAIN/LOGIN before sending mail. Credentials travel in plaintext — only use this on localhost for testing.</p>
+    </div>
+
+    <!-- Updates -->
+    <div class="bg-white rounded-md px-4 py-2 border mb-2">
+      <h3 class="font-semibold mb-2">Updates</h3>
+      <div class="relative flex items-center pb-2">
+        <button @click="checkForUpdates" type="button"
+                class="inline-flex items-center px-3 py-2.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 bg-gray-700 hover:bg-gray-800">
+          Check for updates
+        </button>
+        <div class="ml-3 text-sm text-gray-600">{{ updateStatus }}</div>
+      </div>
+    </div>
+
     <!-- Forward emails -->
     <div class="bg-white rounded-md px-4 py-2 border mb-2">
       <h3 class="font-semibold mb-2">Forward emails</h3>
@@ -388,9 +432,12 @@ func main() {
 </template>
 
 <script setup>
+import {ref} from 'vue';
 import {storeToRefs} from 'pinia';
 import {invoke} from '@tauri-apps/api/core';
 import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-apps/plugin-notification';
+import {check} from '@tauri-apps/plugin-updater';
+import {relaunch} from '@tauri-apps/plugin-process';
 import {useSettingStore} from '../stores/setting';
 
 const setting = useSettingStore();
@@ -402,6 +449,8 @@ const {
   forwardEmailPort,
   forwardEmailUsername,
   forwardEmailPassword,
+  srvUsername,
+  srvPassword,
 } = storeToRefs(setting);
 
 function notify() {
@@ -414,7 +463,11 @@ function notify() {
 function startServer() {
   setting.setSrvStatus(true);
   setting.setSrvResponseMessage("");
-  invoke("start_smtp_server", {address: `${setting.ipAddress}:${setting.port}`}).then(response => {
+  invoke("start_smtp_server", {
+    address: `${setting.ipAddress}:${setting.port}`,
+    username: setting.srvAuthEnabled ? setting.srvUsername : "",
+    password: setting.srvAuthEnabled ? setting.srvPassword : "",
+  }).then(response => {
     if (response.length > 0) {
       setting.setSrvStatus(false);
       setting.setSrvResponseMessage(response);
@@ -435,6 +488,32 @@ function startServer() {
       });
     }
   }, 1000);
+}
+
+const updateStatus = ref('');
+
+async function checkForUpdates() {
+  updateStatus.value = 'Checking for updates...';
+  try {
+    const update = await check();
+    if (!update) {
+      updateStatus.value = 'You are up to date!';
+      return;
+    }
+    updateStatus.value = `Update ${update.version} available. Downloading...`;
+    await update.downloadAndInstall((event) => {
+      if (event.event === 'Started') {
+        updateStatus.value = 'Downloading update...';
+      }
+      if (event.event === 'Finished') {
+        updateStatus.value = 'Download finished. Restarting...';
+      }
+    });
+    await relaunch();
+  } catch (err) {
+    updateStatus.value = `Update check failed: ${err}`;
+    console.error(err);
+  }
 }
 </script>
 

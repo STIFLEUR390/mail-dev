@@ -1,8 +1,10 @@
 use crate::window;
-use mailin_embedded::response::OK;
-use mailin_embedded::{Handler, Response, Server, SslConfig};
+use mailin::{Action, AuthMechanism, Handler, Response, SessionBuilder};
+use mailin::response::{INVALID_CREDENTIALS, OK};
 use mailparse::body::Body;
 use mailparse::*;
+use std::io::{BufRead, Write};
+use std::net::{IpAddr, Ipv4Addr, TcpListener, TcpStream};
 use tauri::Emitter;
 
 #[derive(Clone, serde::Serialize, Debug)]
@@ -22,11 +24,17 @@ struct Payload {
 #[derive(Clone, Debug)]
 struct MyHandler {
   mime: Vec<String>,
+  username: String,
+  password: String,
 }
 
 impl MyHandler {
-  pub fn new() -> MyHandler {
-    MyHandler { mime: vec![] }
+  pub fn new(username: String, password: String) -> MyHandler {
+    MyHandler {
+      mime: vec![],
+      username,
+      password,
+    }
   }
 }
 
@@ -41,27 +49,122 @@ impl Handler for MyHandler {
     self::parse(mime);
     OK
   }
+
+  fn auth_plain(
+    &mut self,
+    _authorization_id: &str,
+    authentication_id: &str,
+    password: &str,
+  ) -> Response {
+    if authentication_id == self.username && password == self.password {
+      OK
+    } else {
+      INVALID_CREDENTIALS
+    }
+  }
+
+  fn auth_login(&mut self, username: &str, password: &str) -> Response {
+    if username == self.username && password == self.password {
+      OK
+    } else {
+      INVALID_CREDENTIALS
+    }
+  }
 }
 
 // Start the SMTP server
 // bind to custom port, fallback to 25.
+// When `username` is non-empty, SMTP AUTH (PLAIN/LOGIN) is required for delivery.
 #[tauri::command]
-pub async fn start_smtp_server(address: Option<String>) -> String {
+pub async fn start_smtp_server(
+  address: Option<String>,
+  username: Option<String>,
+  password: Option<String>,
+) -> String {
   let address = address.unwrap_or_else(|| "127.0.0.1:25".into());
-  let handler = MyHandler::new();
-  let mut server = Server::new(handler);
-  server
-    .with_name("localhost")
-    .with_ssl(SslConfig::None)
-    .unwrap()
-    .with_addr(address)
-    .unwrap();
-  match server.serve() {
-    Ok(_) => "".to_string(),
-    Err(error) => {
-      format!("{}", error)
+  let username = username.unwrap_or_default();
+  let password = password.unwrap_or_default();
+  let auth_enabled = !username.is_empty();
+
+  match TcpListener::bind(&address) {
+    Ok(listener) => {
+      std::thread::spawn(move || {
+        let localaddr = listener.local_addr().unwrap();
+        println!("SMTP server started on {}", localaddr);
+        for stream in listener.incoming() {
+          match stream {
+            Ok(stream) => {
+              let handler = MyHandler::new(username.clone(), password.clone());
+              std::thread::spawn(move || {
+                if let Err(e) = handle_connection(stream, handler, auth_enabled) {
+                  println!("SMTP connection error: {:?}", e);
+                }
+              });
+            }
+            Err(e) => println!("SMTP connection failed: {}", e),
+          }
+        }
+      });
+      "".to_string()
+    }
+    Err(error) => format!("{}", error),
+  }
+}
+
+fn handle_connection(
+  mut stream: TcpStream,
+  handler: MyHandler,
+  auth_enabled: bool,
+) -> std::io::Result<()> {
+  let client_addr: IpAddr = stream
+    .peer_addr()
+    .map(|a| a.ip())
+    .unwrap_or(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)));
+
+  let mut builder = SessionBuilder::new("localhost");
+  if auth_enabled {
+    builder
+      .enable_auth(AuthMechanism::Plain)
+      .enable_auth(AuthMechanism::Login)
+      // Local testing server: allow AUTH without TLS (localhost only).
+      .insecure_enable_plaintext_auth();
+  }
+  let mut session = builder.build(client_addr, handler);
+
+  // Greeting
+  let greeting = session.greeting();
+  greeting.write_to(&mut stream)?;
+  stream.flush()?;
+
+  let mut reader = std::io::BufReader::new(stream.try_clone()?);
+  let mut line = Vec::with_capacity(80);
+  loop {
+    line.clear();
+    let num_bytes = reader.read_until(b'\n', &mut line)?;
+    if num_bytes == 0 {
+      break;
+    }
+    let res = session.process(&line);
+    match res.action {
+      Action::Reply => {
+        res.write_to(&mut stream)?;
+        stream.flush()?;
+      }
+      Action::Close => {
+        res.write_to(&mut stream)?;
+        stream.flush()?;
+        return Ok(());
+      }
+      Action::UpgradeTls => {
+        // No TLS support in this server; close the connection.
+        res.write_to(&mut stream)?;
+        stream.flush()?;
+        return Ok(());
+      }
+      Action::NoReply => (),
     }
   }
+  Ok(())
 }
 
 // Parse the mail content and send it to the webview
@@ -103,12 +206,6 @@ pub fn parse(mime: String) {
           payload.html = x.get_body().unwrap();
         }
       }
-      // DispositionType::FormData => {
-      //
-      // }
-      // DispositionType::Extension(ext) => {
-      //
-      // }
       DispositionType::Attachment => {
         let filename = x
           .get_content_disposition()

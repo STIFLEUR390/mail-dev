@@ -10,6 +10,10 @@ export const useSettingStore = defineStore('setting', {
     port: 2525,
     spamChecking: true,
 
+    srvAuthEnabled: false,
+    srvUsername: "",
+    srvPassword: "",
+
     forwardEmailHost: "smtp.gmail.com",
     forwardEmailPort: "587",
     forwardEmailUsername: "",
@@ -46,6 +50,15 @@ export const useSettingStore = defineStore('setting', {
     },
     setSpamChecking(value) {
       this.spamChecking = value;
+    },
+    setSrvAuthEnabled(value) {
+      this.srvAuthEnabled = value;
+    },
+    setSrvUsername(value) {
+      this.srvUsername = value;
+    },
+    setSrvPassword(value) {
+      this.srvPassword = value;
     },
     setForwardEmailHost(value) {
       this.forwardEmailHost = value;
