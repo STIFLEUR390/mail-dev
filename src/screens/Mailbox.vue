@@ -271,6 +271,39 @@ function getSpamScore(mail) {
     .finally(() => clearTimeout(timeout));
 }
 
+// Copy the content of the currently active tab to the system clipboard.
+function currentTabContent() {
+  const m = mailbox.mail || {};
+  switch (tab.value) {
+    case 'Raw':
+      return m.mime || '';
+    case 'Text':
+      return m.text || '';
+    case 'HTML-Source':
+      return m.html || '';
+    case 'Headers':
+      return (m.headers || []).map(h => `${h[0]}: ${h[1]}`).join('\n');
+    case 'Spam Reports':
+      return m.spam_score
+        ? `Spam score: ${m.spam_score}\n${(m.spam_rules || [])
+            .map(r => `${r.score}\t${r.description}`)
+            .join('\n')}`
+        : '';
+    default:
+      return m.html || '';
+  }
+}
+
+async function copyCurrentTab() {
+  const content = currentTabContent();
+  if (!content) return;
+  await writeText(content);
+  copyFeedback.value = t('mailbox.copied');
+  setTimeout(() => {
+    copyFeedback.value = '';
+  }, 1500);
+}
+
 async function saveAttachment(attachment) {
   const dest = await save({
     defaultPath: attachment[0],

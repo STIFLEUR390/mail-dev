@@ -60,6 +60,17 @@ vi.mock('@tauri-apps/plugin-updater', () => ({
   check: vi.fn(() => Promise.resolve(null)),
 }));
 
+vi.mock('@tauri-apps/plugin-autostart', () => ({
+  enable: vi.fn(() => Promise.resolve()),
+  disable: vi.fn(() => Promise.resolve()),
+  isEnabled: vi.fn(() => Promise.resolve(false)),
+}));
+
+vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({
+  writeText: vi.fn(() => Promise.resolve()),
+  readText: vi.fn(() => Promise.resolve('')),
+}));
+
 vi.mock('@tauri-apps/api/path', () => ({
   appDataDir: vi.fn(() => Promise.resolve('/tmp/app-data')),
   join: vi.fn((...parts) => Promise.resolve(parts.join('/'))),

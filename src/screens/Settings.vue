@@ -144,10 +144,26 @@
       </div>
     </section>
 
+    <!-- Autostart -->
+    <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-5 py-4 mb-2">
+      <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">{{ t('settings.autostart') }}</h3>
+      <div class="relative flex items-center gap-2 pb-2">
+        <SwitchToggle :model-value="autostartEnabled" :label="t('settings.autostartLabel')" @update:model-value="onAutostartToggle"/>
+        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"> {{ t('settings.autostartLabel') }} </label>
+      </div>
+    </section>
+
     <!-- Framework configuration -->
     <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-5 py-4 mb-4">
       <div>
-        <h3 class="text-[15px] font-semibold mb-3 text-zinc-900 dark:text-zinc-100">{{ t('settings.framework') }}</h3>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100">{{ t('settings.framework') }}</h3>
+          <button @click="copySnippet" type="button"
+                  class="inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+            <PhCopy :size="14"/>
+            {{ copySnippetFeedback || t('settings.copySnippet') }}
+          </button>
+        </div>
         <select v-model="framework"
                 class="mt-1 block w-full xl:w-96 px-3 py-2 text-sm bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-colors">
           <optgroup label="PHP">
@@ -191,7 +207,7 @@
           {{ t('settings.intro.laravel') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `MAIL_MAILER=smtp
 MAIL_HOST=${ipAddress}
 MAIL_PORT=${port}
@@ -206,7 +222,7 @@ MAIL_ENCRYPTION=null` }}
           {{ t('settings.intro.symfony') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `MAILER_DSN=smtp://${ipAddress}:${port}` }}
         </code>
       </div>
@@ -216,7 +232,7 @@ MAIL_ENCRYPTION=null` }}
           {{ t('settings.intro.wordpress') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `function mail_dev($phpmailer) {
 	$phpmailer->isSMTP();
 	$phpmailer->Host = '${ipAddress}';
@@ -233,7 +249,7 @@ add_action('phpmailer_init', 'mail_dev');` }}
           {{ t('settings.intro.yii') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `return [
 	'yiisoft/mailer' => [
 		'mailer' => [
@@ -251,7 +267,7 @@ add_action('phpmailer_init', 'mail_dev');` }}
           {{ t('settings.intro.phpmailer') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `<?php
 require 'vendor/autoload.php';
 
@@ -273,7 +289,7 @@ $mail->send();` }}
           {{ t('settings.intro.codeigniter') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `email.protocol = smtp
 email.SMTPHost = ${ipAddress}
 email.SMTPPort = ${port}
@@ -286,7 +302,7 @@ email.SMTPAuth = false` }}
           {{ t('settings.intro.nodemailer') }}<br/>
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `import nodemailer from 'nodemailer';
 
 const transport = nodemailer.createTransport({
@@ -308,7 +324,7 @@ await transport.sendMail({
           {{ t('settings.intro.django') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = '${ipAddress}'
 EMAIL_PORT = ${port}
@@ -321,7 +337,7 @@ EMAIL_USE_TLS = False` }}
           {{ t('settings.intro.flask') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `app.config['MAIL_SERVER'] = '${ipAddress}'
 app.config['MAIL_PORT'] = ${port}
 app.config['MAIL_USE_TLS'] = False
@@ -334,7 +350,7 @@ app.config['MAIL_USE_SSL'] = False` }}
           {{ t('settings.intro.rails') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `config.action_mailer.delivery_method = :smtp 
 config.action_mailer.smtp_settings = {
 	:address => '${ipAddress}',
@@ -349,7 +365,7 @@ config.action_mailer.smtp_settings = {
           {{ t('settings.intro.rubySmtp') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `require 'net/smtp'
 
 message = <<-END.split("\n").map!(&:strip).join("\n")
@@ -374,7 +390,7 @@ end` }}
           {{ t('settings.intro.spring') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `spring.mail.host=${ipAddress}
 spring.mail.port=${port}
 spring.mail.username=
@@ -389,7 +405,7 @@ spring.mail.properties.mail.smtp.starttls.enable=false` }}
           {{ t('settings.intro.dotnet') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `"Smtp": {
   "Host": "${ipAddress}",
   "Port": ${port}
@@ -398,7 +414,7 @@ spring.mail.properties.mail.smtp.starttls.enable=false` }}
         <p class="py-2 text-sm text-zinc-600 dark:text-zinc-400">
           {{ t('settings.intro.dotnetCs') }}
         </p>
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `using var client = new SmtpClient("${ipAddress}", ${port});
 await client.SendMailAsync("from@example.com",
     "to@example.com", "Test", "Hello from Mail-Dev!");` }}
@@ -410,7 +426,7 @@ await client.SendMailAsync("from@example.com",
           {{ t('settings.intro.go') }}
         </p>
 
-        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner">
+        <code class="font-mono text-[13px] mb-2 block bg-zinc-900 dark:bg-zinc-950 text-zinc-200 dark:text-zinc-100 rounded-lg p-3 overflow-x-auto shadow-inner" ref="snippetCode">
           {{ `package main
 
 import (
@@ -433,10 +449,13 @@ func main() {
 </template>
 
 <script setup>
-import {ref} from 'vue';
+import {onMounted, ref} from 'vue';
 import {storeToRefs} from 'pinia';
 import {useI18n} from 'vue-i18n';
 import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-apps/plugin-notification';
+import {enable as enableAutostart, disable as disableAutostart, isEnabled as autostartIsEnabled} from '@tauri-apps/plugin-autostart';
+import {writeText} from '@tauri-apps/plugin-clipboard-manager';
+import {PhCopy} from '@phosphor-icons/vue';
 import {check} from '@tauri-apps/plugin-updater';
 import {relaunch} from '@tauri-apps/plugin-process';
 import {useSettingStore} from '../stores/setting';
@@ -457,6 +476,48 @@ const {
   srvUsername,
   srvPassword,
 } = storeToRefs(setting);
+
+// Autostart toggle (runtime state from the OS, not persisted in SQLite).
+const autostartEnabled = ref(false);
+const copySnippetFeedback = ref('');
+const snippetCode = ref(null);
+
+onMounted(async () => {
+  try {
+    autostartEnabled.value = await autostartIsEnabled();
+  } catch (err) {
+    console.warn('[settings] autostart state unavailable:', err);
+  }
+});
+
+async function onAutostartToggle(value) {
+  try {
+    if (value) await enableAutostart();
+    else await disableAutostart();
+    autostartEnabled.value = value;
+  } catch (err) {
+    autostartEnabled.value = !value;
+    console.warn('[settings] autostart toggle failed:', err);
+  }
+}
+
+// Copies the currently visible framework snippet(s) to the system clipboard.
+async function copySnippet() {
+  const el = snippetCode.value;
+  if (!el) return;
+  // The .NET section renders two <code> blocks; collect every visible one.
+  const blocks = el.closest('section')?.querySelectorAll('code') || [];
+  const text = [...blocks]
+    .map(b => b.textContent?.trim())
+    .filter(Boolean)
+    .join('\n\n');
+  if (!text) return;
+  await writeText(text);
+  copySnippetFeedback.value = t('settings.copied');
+  setTimeout(() => {
+    copySnippetFeedback.value = '';
+  }, 1500);
+}
 
 function notify() {
   sendNotification({

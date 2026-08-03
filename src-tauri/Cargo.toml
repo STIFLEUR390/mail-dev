@@ -37,6 +37,7 @@ tauri-plugin-sql = { version = "2.4.0", features = ["sqlite"] }
 tauri-plugin-process = "2.3.1"
 sentry = "0.42"
 tauri-plugin-sentry = "0.5"
+tauri-plugin-clipboard-manager = "2.3.2"
 
 [profile.release]
 lto = true
@@ -45,4 +46,6 @@ codegen-units = 1
 panic = "abort"
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-autostart = "2.5.1"
+tauri-plugin-single-instance = "2.4.3"
 tauri-plugin-updater = "2.10.1"

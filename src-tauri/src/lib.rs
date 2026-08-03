@@ -4,6 +4,7 @@ use forward::forward_mail;
 use smtp::{
   SmtpServerState, delete_attachment_files, export_attachment, start_smtp_server, stop_smtp_server,
 };
+use tauri::Manager;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 // Public Sentry DSN (proxy HTTPS de l'instance rustrak-api.applix.fr).
@@ -75,6 +76,14 @@ pub fn run() {
   }
 
   tauri::Builder::default()
+    // Ensure only one instance runs at a time: two instances would fight over
+    // the SMTP port. When a second launch is attempted, focus the existing
+    // window instead.
+    .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+      if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_focus();
+      }
+    }))
     .manage(SmtpServerState::default())
     .plugin(tauri_plugin_sentry::init(&client))
     .plugin(tauri_plugin_http::init())
@@ -82,6 +91,7 @@ pub fn run() {
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_process::init())
+    .plugin(tauri_plugin_clipboard_manager::init())
     .plugin(
       tauri_plugin_sql::Builder::default()
         .add_migrations("sqlite:maildev.db", migrations())
@@ -89,9 +99,19 @@ pub fn run() {
     )
     .setup(|app| {
       #[cfg(desktop)]
-      app
-        .handle()
-        .plugin(tauri_plugin_updater::Builder::new().build())?;
+      {
+        app
+          .handle()
+          .plugin(tauri_plugin_updater::Builder::new().build())?;
+        // Optional auto-start of the application at system startup (macOS uses
+        // a LaunchAgent, Windows the registry, Linux a .desktop autostart entry).
+        app
+          .handle()
+          .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+          ))?;
+      }
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![
