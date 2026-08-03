@@ -386,3 +386,55 @@ func main() {
     </div>
   </div>
 </template>
+
+<script setup>
+import {storeToRefs} from 'pinia';
+import {invoke} from '@tauri-apps/api/core';
+import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-apps/plugin-notification';
+import {useSettingStore} from '../stores/setting';
+
+const setting = useSettingStore();
+const {
+  ipAddress,
+  port,
+  framework,
+  forwardEmailHost,
+  forwardEmailPort,
+  forwardEmailUsername,
+  forwardEmailPassword,
+} = storeToRefs(setting);
+
+function notify() {
+  sendNotification({
+    title: "Mail-Dev: SMTP Connection",
+    body: "SMTP server started successfully",
+  });
+}
+
+function startServer() {
+  setting.setSrvStatus(true);
+  setting.setSrvResponseMessage("");
+  invoke("start_smtp_server", {address: `${setting.ipAddress}:${setting.port}`}).then(response => {
+    if (response.length > 0) {
+      setting.setSrvStatus(false);
+      setting.setSrvResponseMessage(response);
+    }
+  }).catch();
+  setTimeout(() => {
+    if (setting.srvStatus === true && setting.useNotification === true) {
+      isPermissionGranted().then(granted => {
+        if (!granted) {
+          requestPermission().then(response => {
+            if (response === 'granted') {
+              notify();
+            }
+          });
+        } else {
+          notify();
+        }
+      });
+    }
+  }, 1000);
+}
+</script>
+
