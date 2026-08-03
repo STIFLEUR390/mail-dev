@@ -23,10 +23,15 @@
         </div>
         <div>
           <label for="port" class="block text-sm font-medium text-gray-700"> &nbsp; </label>
-          <div class="mt-1">
-            <button @click="startServer" type="button"
-                    :class="`inline-flex items-center px-3 py-2.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 bg-green-500 hover:bg-green-600 ${setting.srvStatus === true && 'opacity-80'}`">
+          <div class="mt-1 flex gap-x-2">
+            <button @click="startServerClick" type="button"
+                    :class="`inline-flex items-center px-3 py-2.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 ${setting.srvStatus === true ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`"
+                    :disabled="setting.srvStatus === true">
               Start Server
+            </button>
+            <button v-if="setting.srvStatus === true" @click="stopServer" type="button"
+                    class="inline-flex items-center px-3 py-2.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 bg-red-500 hover:bg-red-600">
+              Stop Server
             </button>
           </div>
         </div>
@@ -121,6 +126,22 @@
             <button @click="setting.setForwardEnabled(!setting.forwardEnabled)" type="button"
                     :class="`inline-flex items-center px-3 py-2.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 ${setting.forwardEnabled === true ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`">
               {{ setting.forwardEnabled === true ? 'Disable Forwarding' : 'Enable Forwarding' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spam checking -->
+    <div class="bg-white rounded-md px-4 py-2 border mb-2">
+      <h3 class="font-semibold mb-2">Spam checking</h3>
+      <div class="relative flex pb-2">
+        <div>
+          <label for="spamChecking" class="block text-sm font-medium text-gray-700"> Check spam score with SpamAssassin (postmarkapp.com) </label>
+          <div class="mt-1">
+            <button @click="setting.setSpamChecking(!setting.spamChecking)" type="button"
+                    :class="`inline-flex items-center px-3 py-2.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 ${setting.spamChecking === true ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`">
+              {{ setting.spamChecking === true ? 'Disable Spam Checking' : 'Enable Spam Checking' }}
             </button>
           </div>
         </div>
@@ -434,13 +455,14 @@ func main() {
 <script setup>
 import {ref} from 'vue';
 import {storeToRefs} from 'pinia';
-import {invoke} from '@tauri-apps/api/core';
 import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-apps/plugin-notification';
 import {check} from '@tauri-apps/plugin-updater';
 import {relaunch} from '@tauri-apps/plugin-process';
 import {useSettingStore} from '../stores/setting';
+import {useSmtpServer} from '../composables/useSmtpServer';
 
 const setting = useSettingStore();
+const {startServer, stopServer} = useSmtpServer();
 const {
   ipAddress,
   port,
@@ -460,34 +482,21 @@ function notify() {
   });
 }
 
-function startServer() {
-  setting.setSrvStatus(true);
-  setting.setSrvResponseMessage("");
-  invoke("start_smtp_server", {
-    address: `${setting.ipAddress}:${setting.port}`,
-    username: setting.srvAuthEnabled ? setting.srvUsername : "",
-    password: setting.srvAuthEnabled ? setting.srvPassword : "",
-  }).then(response => {
-    if (response.length > 0) {
-      setting.setSrvStatus(false);
-      setting.setSrvResponseMessage(response);
-    }
-  }).catch();
-  setTimeout(() => {
-    if (setting.srvStatus === true && setting.useNotification === true) {
-      isPermissionGranted().then(granted => {
-        if (!granted) {
-          requestPermission().then(response => {
-            if (response === 'granted') {
-              notify();
-            }
-          });
-        } else {
-          notify();
-        }
-      });
-    }
-  }, 1000);
+async function startServerClick() {
+  const started = await startServer();
+  if (started && setting.useNotification === true) {
+    isPermissionGranted().then(granted => {
+      if (!granted) {
+        requestPermission().then(response => {
+          if (response === 'granted') {
+            notify();
+          }
+        });
+      } else {
+        notify();
+      }
+    });
+  }
 }
 
 const updateStatus = ref('');

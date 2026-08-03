@@ -14,12 +14,11 @@
       <div v-if="!setting.srvStatus" @click="startServer"
            class="underline ml-2 cursor-pointer font-semibold hover:opacity-80 text-xs">Start Server
       </div>
-      <div v-else>
-        <svg class="ml-2 h-4 w-4 fill-current text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-          <path d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"/>
-        </svg>
+      <div v-else @click="stopServer"
+           class="underline ml-2 cursor-pointer font-semibold hover:opacity-80 text-xs">Stop Server
       </div>
     </div>
+    <div v-if="setting.srvResponseMessage" class="text-xs text-red-600 font-medium mb-2">{{ setting.srvResponseMessage }}</div>
   </div>
 
   <!-- Mail list + detail -->
@@ -27,9 +26,9 @@
     <!-- List -->
     <div class="h-full flex-shrink-0 w-64 lg:w-80 xl:w-96 border-r border-gray-300/70 scroll overflow-y-auto">
       <div class="py-2 px-2 items-center flex justify-end border-b border-gray-300/70">
-        <button @click="mailbox.clearMails()" class="block ml-auto rounded-md px-2.5 py-1.5 uppercase text-xs font-semibold flex items-center gap-x-1 hover:text-red-500">
+        <button @click="clearAllMails" class="block ml-auto rounded-md px-2.5 py-1.5 uppercase text-xs font-semibold flex items-center gap-x-1 hover:text-red-500">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
           </svg>
           Delete all mails
         </button>
@@ -82,16 +81,16 @@
           </template>
           <template v-else>{{ item }}</template>
         </div>
-        <button @click="mailbox.deleteMail(mailbox.mail.key)" class="block ml-auto rounded-md px-2.5 py-1.5 uppercase text-xs font-semibold flex items-center gap-x-1 hover:text-red-500">
+        <button @click="deleteSelected" class="block ml-auto rounded-md px-2.5 py-1.5 uppercase text-xs font-semibold flex items-center gap-x-1 hover:text-red-500">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
           </svg>
           Delete
         </button>
       </div>
 
       <div class="grow scroll overflow-y-auto bg-white rounded-md border">
-        <MailContent :tab="tab" :mail="mailbox.mail"/>
+        <MailContent :tab="tab" :mail="mailbox.mail" :spam-error="spamError"/>
       </div>
     </div>
 
@@ -108,19 +107,21 @@
 </template>
 
 <script setup>
-import {computed, ref, watch} from 'vue';
-import {invoke} from '@tauri-apps/api/core';
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import {fetch} from '@tauri-apps/plugin-http';
-import {save} from '@tauri-apps/plugin-dialog';
+import {ask, save} from '@tauri-apps/plugin-dialog';
 import {writeFile} from '@tauri-apps/plugin-fs';
 import MailContent from '../components/MailContent.vue';
 import {useMailboxStore} from '../stores/mailbox';
 import {useSettingStore} from '../stores/setting';
+import {useSmtpServer} from '../composables/useSmtpServer';
 
 const mailbox = useMailboxStore();
 const setting = useSettingStore();
+const {startServer, stopServer} = useSmtpServer();
 
 const tab = ref('HTML');
+const spamError = ref('');
 
 const tabs = computed(() => {
   return (mailbox.mail.html === "" ? ["Text", "Raw", "Headers", "Spam Reports"] : ["HTML", "HTML-Source", "Text", "Raw", "Headers", "Spam Reports"]);
@@ -155,35 +156,77 @@ function rowTextClass(mail) {
   return mail.key === mailbox.mailIndex ? 'text-gray-100' : 'text-gray-700';
 }
 
-function startServer() {
-  invoke("start_smtp_server", {
-    address: `${setting.ipAddress}:${setting.port}`,
-    username: setting.srvAuthEnabled ? setting.srvUsername : "",
-    password: setting.srvAuthEnabled ? setting.srvPassword : "",
-  }).then().catch();
-  setting.setSrvStatus(true);
-}
-
 function selectMail(mail) {
   mailbox.setMailIndex(mail.key);
   tab.value = mail.html === "" ? 'Text' : 'HTML';
 }
 
+// Confirm dialog with graceful fallback for plain-browser dev mode.
+async function confirmAction(message) {
+  try {
+    return await ask(message, {title: 'Mail-Dev', kind: 'warning'});
+  } catch (err) {
+    return window.confirm(message);
+  }
+}
+
+async function clearAllMails() {
+  const ok = await confirmAction('Delete all mails? This cannot be undone.');
+  if (ok) mailbox.clearMails();
+}
+
+async function deleteSelected() {
+  if (mailbox.mailIndex === null) return;
+  const ok = await confirmAction('Delete this mail?');
+  if (ok) mailbox.deleteMail(mailbox.mailIndex);
+}
+
+// Keyboard shortcuts: Delete removes the selected mail, arrows move the selection.
+function onKeydown(e) {
+  const target = e.target;
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+  if (e.key === 'Delete' && mailbox.mailIndex !== null) {
+    e.preventDefault();
+    deleteSelected();
+  }
+  if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && mailbox.mails.length > 0) {
+    const idx = mailbox.mails.findIndex(m => m.key === mailbox.mailIndex);
+    const next = e.key === 'ArrowDown' ? idx + 1 : idx - 1;
+    if (idx !== -1 && next >= 0 && next < mailbox.mails.length) {
+      e.preventDefault();
+      selectMail(mailbox.mails[next]);
+    }
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
+
 function getSpamScore(mail) {
-  if (mail.spam_score === "") {
-    fetch("https://spamcheck.postmarkapp.com/filter", {
-      method: "POST",
-      body: JSON.stringify({email: mail.mime.toString(), options: "long"}),
-      headers: {"Accept": "application/json", "Content-Type": "application/json"}
-    }).then(res => res.json()).then(data => {
-      console.log(data);
+  if (!setting.spamChecking) return;
+  if (mail.spam_score !== "") return;
+  spamError.value = '';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  fetch("https://spamcheck.postmarkapp.com/filter", {
+    method: "POST",
+    body: JSON.stringify({email: mail.mime.toString(), options: "long"}),
+    headers: {"Accept": "application/json", "Content-Type": "application/json"},
+    signal: controller.signal,
+  })
+    .then(res => res.json())
+    .then(data => {
       mailbox.setSpamScore({
         key: mail.key,
         spam_score: data.score,
         spam_rules: data.rules,
       });
-    }).catch(err => console.log(err));
-  }
+    })
+    .catch(err => {
+      spamError.value = `Spam check failed: ${err}`;
+      console.log(err);
+    })
+    .finally(() => clearTimeout(timeout));
 }
 
 async function saveAttachment(attachment) {

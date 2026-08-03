@@ -14,8 +14,10 @@
 
   <!-- HTML -->
   <div v-else-if="tab === 'HTML'" class="h-full w-full scroll overflow-y-auto">
-    <iframe id="previewIframe" title="Letter preview" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-            :src="htmlSrc" scrolling="no" class="w-full h-full scroll" @load="resizeIframe"></iframe>
+    <!-- Untrusted email HTML: sandboxed without allow-scripts/allow-same-origin (no JS,
+         opaque origin) so a malicious email cannot run code or access the app. -->
+    <iframe id="previewIframe" title="Letter preview" sandbox="allow-popups allow-popups-to-escape-sandbox"
+            :src="htmlSrc" class="w-full h-full"></iframe>
   </div>
 
   <!-- HTML-Source -->
@@ -23,7 +25,8 @@
 
   <!-- Spam Reports -->
   <div v-else-if="tab === 'Spam Reports'" class="p-2 text-sm font-sans text-gray-600">
-    <div v-if="mail.spam_score === ''">Loading...</div>
+    <div v-if="spamError" class="text-red-600">Spam check failed: {{ spamError }}</div>
+    <div v-else-if="mail.spam_score === ''">Loading...</div>
     <template v-else>
       <h1 class="font-medium mb-1">Your SpamAssassin score is {{ mail.spam_score }}!</h1>
       <p class="mb-3 text-sm text-gray-700">The lower your score, the more likely your email is going to be received in your subscribers' inboxes.</p>
@@ -55,6 +58,7 @@ import {computed} from 'vue';
 const props = defineProps({
   tab: {type: String, default: 'HTML'},
   mail: {type: Object, default: () => ({})},
+  spamError: {type: String, default: ''},
 });
 
 const htmlSrc = computed(() => {
@@ -63,14 +67,4 @@ const htmlSrc = computed(() => {
   const blob = new Blob([data], {type: 'text/html'});
   return URL.createObjectURL(blob);
 });
-
-function resizeIframe() {
-  const previewIframe = document.getElementById('previewIframe');
-  if (!previewIframe) return;
-  let iframeBody = previewIframe.contentWindow.document.body;
-  if (iframeBody) previewIframe.style.height = `${iframeBody.offsetHeight + 30}px`;
-  let iframeHeight = previewIframe.contentWindow.document.body.offsetHeight;
-  if (iframeHeight < 500) iframeHeight = 500 - 10;
-  previewIframe.style.height = `${iframeHeight}px`;
-}
 </script>

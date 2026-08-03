@@ -36,7 +36,7 @@ export const useMailboxStore = defineStore('mailbox', {
       if (arr) payload.to = arr[1];
       const mail = {
         ...payload,
-        key: Math.random().toString(),
+        key: crypto.randomUUID(),
         seen: false,
         spam_score: "",
         spam_rules: [],

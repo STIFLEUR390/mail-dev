@@ -1,13 +1,12 @@
 import {createRouter, createWebHashHistory} from 'vue-router';
-import Mailbox from '../screens/Mailbox.vue';
-import Settings from '../screens/Settings.vue';
 
+// Lazy-loaded screens: Vite code-splits them so the app shell starts faster.
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     {path: '/', redirect: '/mailbox'},
-    {path: '/mailbox', component: Mailbox},
-    {path: '/settings', component: Settings},
+    {path: '/mailbox', component: () => import('../screens/Mailbox.vue')},
+    {path: '/settings', component: () => import('../screens/Settings.vue')},
   ],
 });
 

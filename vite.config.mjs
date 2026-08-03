@@ -25,4 +25,20 @@ export default defineConfig({
       ignored: ['**/src-tauri/**'],
     },
   },
+  build: {
+    target: 'es2022',
+    reportCompressedSize: false,
+    rollupOptions: {
+      output: {
+        // Rolldown requires manualChunks as a function.
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('/vue/') || id.includes('/pinia/') || id.includes('/vue-router/')) return 'vue';
+            if (id.includes('/@tauri-apps/')) return 'tauri';
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
 });

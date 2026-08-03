@@ -37,8 +37,13 @@ onMounted(async () => {
   } catch (err) {
     console.warn('[app] persistence init failed:', err);
   }
+  // Debounce settings persistence: group rapid consecutive changes into one write.
+  let saveSettingsTimer = null;
   setting.$subscribe((_mutation, state) => {
-    saveSettings(state);
+    clearTimeout(saveSettingsTimer);
+    saveSettingsTimer = setTimeout(() => {
+      saveSettings(state).catch(err => console.warn('[app] failed to persist settings:', err));
+    }, 400);
   });
 
   // Silent background update check: notify the user if a new release exists.
@@ -57,7 +62,6 @@ onMounted(async () => {
     mailbox.addMail(res.payload);
 
     if (setting.forwardEnabled === true) {
-      console.log(res.payload);
       invoke('forward_mail', {
         host: setting.forwardEmailHost,
         port: setting.forwardEmailPort,
@@ -66,7 +70,9 @@ onMounted(async () => {
         email_content: res.payload.mime,
         email_to: res.payload.to,
         email_subject: res.payload.subject,
-      }).then(r => console.log(r));
+      })
+        .then(r => console.log('[forward]', r))
+        .catch(err => console.warn('[forward] failed:', err));
     }
 
     if (setting.useNotification === true) {

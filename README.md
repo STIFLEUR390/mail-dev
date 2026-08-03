@@ -23,6 +23,23 @@ Give it a try, [Download now](https://github.com/STIFLEUR390/mail-dev/releases).
 - [x] Auto update (GitHub Releases)
 - [x] SMTP Authentication (AUTH PLAIN/LOGIN)
 
+## Roadmap:
+- [x] Server lifecycle management (start/stop, prevent double-start)
+- [x] Error-proof parsing (no panics) + 8-bit MIME support
+- [x] Secure HTML preview (iframe sandbox hardening)
+- [x] Keyboard shortcuts (Delete, next/prev mail)
+- [x] Forwarding: error feedback + timeouts
+- [x] Spam-check toggle wired up (Settings)
+- [x] Lazy-loaded routes + vendor code splitting
+- [x] Settings persistence debouncing
+- [x] Rust tests (cargo test: parsing + SMTP lifecycle)
+- [x] CI: fmt, clippy, tests, build
+- [ ] Search / filter mails in the mailbox
+- [ ] Attachment storage outside SQLite (disk / BLOBs)
+- [ ] Frontend tests (Vitest + Vue Test Utils)
+
+> 📋 Full analysis & prioritized improvement list: [docs/improvements.md](docs/improvements.md)
+
 ## Platforms
 
 - **Windows** (7/8/10/11) — NSIS installer (per-user), WebView2 installed automatically
@@ -49,7 +66,7 @@ Give it a try, [Download now](https://github.com/STIFLEUR390/mail-dev/releases).
 
 ## Requirement:
 - Tauri CLI v2
-- NodeJS 18+ (npm/yarn) or [Bun](https://bun.sh)
+- NodeJS 20.19+ / 22.12+ (npm/yarn) or [Bun](https://bun.sh) — required by Vite 8
 
 ### Dev
 ```text
