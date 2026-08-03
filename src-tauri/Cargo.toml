@@ -19,9 +19,9 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-mailin-embedded = { version = "^0", features = ["rtls"] }
-mailparse = "0.13.8"
-lettre = "0.10.1"
+mailin-embedded = { version = "0.8", features = ["rtls"] }
+mailparse = "0.16"
+lettre = "0.11"
 tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-http = "2"
 tauri-plugin-dialog = "2"

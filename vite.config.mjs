@@ -1,17 +1,12 @@
 import {defineConfig} from 'vite';
-import react from '@vitejs/plugin-react';
+import vue from '@vitejs/plugin-vue';
+import tailwindcss from '@tailwindcss/vite';
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [vue(), tailwindcss()],
   clearScreen: false,
-  esbuild: {
-    // CRA-style project: JSX lives in .js files (not .jsx)
-    loader: 'jsx',
-    include: /src\/.*\.js$/,
-    exclude: [],
-  },
   server: {
     // Tauri expects a fixed port, fail if that port is not available
     port: 3000,

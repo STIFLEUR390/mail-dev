@@ -4,7 +4,7 @@
 
 ### Local SMTP Server For Email Testing/Debugging
 
-Built on top of [React](https://reactjs.org/), [Vite](https://vite.dev/) and [Tauri](https://v2.tauri.app/).
+Built on top of [Vue 3](https://vuejs.org/), [Vite](https://vite.dev/), [Pinia](https://pinia.vuejs.org/) and [Tauri](https://v2.tauri.app/).
 
 ---
 
