@@ -88,3 +88,7 @@ bun run tauri build
 ```
 
 > ℹ️ The frontend is bundled with Vite: Tailwind CSS is compiled automatically via PostCSS during dev/build, no separate watch step needed.
+
+### Troubleshooting (Linux)
+
+- **`Gtk-WARNING: Could not load a pixbuf from icon theme` + `WebKit encountered an internal error` at startup** — usually caused by a leaked `GDK_PIXBUF_MODULE_FILE` from a snap-packaged terminal (e.g. ghostty): its loader cache points at `.so` files inside the snap mount, so gdk-pixbuf breaks for every GTK/WebKitGTK app launched from that terminal. Mail-Dev now drops such an override on Linux and falls back to the system cache; to fix other apps, unset it in your shell profile (`unset GDK_PIXBUF_MODULE_FILE`).

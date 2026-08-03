@@ -24,17 +24,16 @@
         <div>
           <div class="h-5"></div>
           <div class="mt-1 flex gap-x-2">
-            <button @click="startServerClick" type="button"
+            <button @click="startServerClick" type="button" :disabled="setting.srvStatus === true || setting.srvBusy"
                     :class="`inline-flex items-center px-3.5 py-2 text-sm font-medium rounded-lg text-white shadow-sm transition-all active:scale-[0.98] ${
-                      setting.srvStatus === true
+                      setting.srvStatus === true || setting.srvBusy
                         ? 'bg-zinc-300 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 cursor-not-allowed'
                         : 'bg-emerald-600 hover:bg-emerald-500'
-                    }`"
-                    :disabled="setting.srvStatus === true">
+                    }`">
               {{ t('settings.startServer') }}
             </button>
-            <button v-if="setting.srvStatus === true" @click="stopServer" type="button"
-                    class="inline-flex items-center px-3.5 py-2 text-sm font-medium rounded-lg text-white shadow-sm bg-red-600 hover:bg-red-500 transition-all active:scale-[0.98]">
+            <button v-if="setting.srvStatus === true" @click="stopServer" type="button" :disabled="setting.srvBusy"
+                    class="inline-flex items-center px-3.5 py-2 text-sm font-medium rounded-lg text-white shadow-sm bg-red-600 hover:bg-red-500 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait">
               {{ t('settings.stopServer') }}
             </button>
           </div>

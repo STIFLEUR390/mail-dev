@@ -72,11 +72,14 @@
           </span>
         </div>
         <button @click="toggleServer"
+                :disabled="setting.srvBusy"
                 :aria-label="setting.srvStatus ? t('sidebar.stopServer') : t('sidebar.startServer')"
-                :class="`w-12 h-12 flex items-center justify-center rounded-full transition-all active:scale-[0.94] ${
-                  setting.srvStatus
-                    ? 'bg-red-600 hover:bg-red-500 text-white shadow-sm'
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+                :class="`w-12 h-12 flex items-center justify-center rounded-full transition-all active:scale-[0.94] disabled:opacity-60 disabled:cursor-wait ${
+                  setting.srvBusy
+                    ? 'animate-pulse bg-zinc-400 dark:bg-zinc-600 text-white'
+                    : setting.srvStatus
+                      ? 'bg-red-600 hover:bg-red-500 text-white shadow-sm'
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
                 }`">
           <PhStop v-if="setting.srvStatus" :size="20" :weight="'fill'"/>
           <PhPlay v-else :size="20" :weight="'fill'" class="ml-0.5"/>

@@ -4,6 +4,7 @@ import {loadSettings} from './db';
 export const useSettingStore = defineStore('setting', {
   state: () => ({
     srvStatus: false,
+    srvBusy: false,
     srvResponseMessage: "",
     framework: "Laravel 13",
     ipAddress: "127.0.0.1",
@@ -35,9 +36,14 @@ export const useSettingStore = defineStore('setting', {
       } catch (err) {
         console.warn('[settings] no persisted settings:', err);
       }
+      // A transient busy flag must never survive a restart.
+      this.srvBusy = false;
     },
     setSrvStatus(value) {
       this.srvStatus = value;
+    },
+    setSrvBusy(value) {
+      this.srvBusy = value;
     },
     setSrvResponseMessage(value) {
       this.srvResponseMessage = value;

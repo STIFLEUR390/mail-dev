@@ -8,13 +8,13 @@
     <div class="text-sm text-zinc-500 dark:text-zinc-400 mb-3">{{ t('mailbox.emptyHint') }}</div>
     <div class="flex items-center gap-3 mb-2">
       <div class="font-mono text-sm bg-zinc-900 dark:bg-zinc-800 text-zinc-200 dark:text-zinc-100 rounded-lg px-3 py-1.5 shadow-inner">{{ setting.ipAddress }}:{{ setting.port }}</div>
-      <button v-if="!setting.srvStatus" @click="startServer"
-              class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2 cursor-pointer transition-colors"
+      <button v-if="!setting.srvStatus" @click="startServer" :disabled="setting.srvBusy"
+              class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-wait"
               :aria-label="t('mailbox.startServer')">
         {{ t('mailbox.startServer') }}
       </button>
-      <button v-else @click="stopServer"
-              class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline underline-offset-2 cursor-pointer transition-colors"
+      <button v-else @click="stopServer" :disabled="setting.srvBusy"
+              class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline underline-offset-2 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-wait"
               :aria-label="t('mailbox.stopServer')">
         {{ t('mailbox.stopServer') }}
       </button>
