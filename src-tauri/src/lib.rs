@@ -4,10 +4,10 @@ use forward::forward_mail;
 use smtp::{SmtpServerState, start_smtp_server, stop_smtp_server};
 use tauri_plugin_sql::{Migration, MigrationKind};
 
-// Public Sentry DSN (proxy HTTP de l'instance rustrak-api.applix.fr).
+// Public Sentry DSN (proxy HTTPS de l'instance rustrak-api.applix.fr).
 // Surchargeable via la variable d'environnement SENTRY_DSN (ex. pour tester
 // contre une instance locale) ; une valeur vide désactive l'envoi.
-const SENTRY_DSN: &str = "http://d47885ba793546b6881e556350460f05@rustrak-api.applix.fr/3";
+const SENTRY_DSN: &str = "https://d47885ba793546b6881e556350460f05@rustrak-api.applix.fr/3";
 
 fn migrations() -> Vec<Migration> {
   vec![
