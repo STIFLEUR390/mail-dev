@@ -3,7 +3,7 @@ use mailin_embedded::response::OK;
 use mailin_embedded::{Handler, Response, Server, SslConfig};
 use mailparse::body::Body;
 use mailparse::*;
-use tauri::Manager;
+use tauri::Emitter;
 
 #[derive(Clone, serde::Serialize, Debug)]
 struct Payload {
@@ -158,5 +158,5 @@ pub fn parse(mime: String) {
   }
 
   let win = window::main_window(None);
-  let _ = win.emit_all("mail-received", payload);
+  let _ = win.emit("mail-received", payload);
 }

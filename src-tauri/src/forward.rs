@@ -25,7 +25,7 @@ pub async fn forward_mail(
   let email_subject = email_subject.unwrap_or_else(|| "".to_string());
 
   if username.is_empty() {
-    username = "samir@mail-dev.com".to_string();
+    username = "maildev@mail-dev.com".to_string();
   }
   if email_to.is_empty() {
     email_to = "email@example.com".to_string();

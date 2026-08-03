@@ -3,10 +3,11 @@ import {connect} from 'react-redux';
 import {withRouter} from "react-router";
 import {clearMails, deleteMail, setMailIndex, setSpamScore} from "../store/mailboxReducer";
 import MailContent from "../components/MailContent";
-import {Body, fetch} from "@tauri-apps/api/http";
-import {dialog, invoke} from "@tauri-apps/api";
+import {fetch} from "@tauri-apps/plugin-http";
+import {invoke} from "@tauri-apps/api/core";
+import {save} from "@tauri-apps/plugin-dialog";
 import {setSrvStatus} from "../store/settingReducer";
-import {writeBinaryFile, writeFile} from "@tauri-apps/api/fs";
+import {writeFile} from "@tauri-apps/plugin-fs";
 
 class Mailbox extends Component {
 	constructor(props) {
@@ -146,32 +147,30 @@ class Mailbox extends Component {
 		if (mail.spam_score === "") {
 			fetch("https://spamcheck.postmarkapp.com/filter", {
 				method: "POST",
-				responseType: 1,
-				mode: 'no-cors',
-				body: Body.json({email: mail.mime.toString(), options: "long"}),
+				body: JSON.stringify({email: mail.mime.toString(), options: "long"}),
 				headers: {"Accept": "application/json", "Content-Type": "application/json"}
-			}).then(res => {
-				console.log(res)
+			}).then(res => res.json()).then(data => {
+				console.log(data)
 				this.props.setSpamScore({
 					key: mail.key,
-					spam_score: res.data.score,
-					spam_rules: res.data.rules,
+					spam_score: data.score,
+					spam_rules: data.rules,
 				});
 			}).catch(err => console.log(err))
 		}
 	}
 	
 	async saveAttachment(attachment) {
-		let path = await dialog.save({
+		let path = await save({
 			defaultPath: attachment[0],
 			filters: [{name: 'Save Attachment.', extensions: []}]
 		});
-		
+
 		if (path !== null) {
 			if (attachment[2] === null) {
-				await writeBinaryFile({path, contents: attachment[3]});
+				await writeFile(path, attachment[3]);
 			} else {
-				await writeFile({path, contents: attachment[2]});
+				await writeFile(path, attachment[2]);
 			}
 		}
 	}

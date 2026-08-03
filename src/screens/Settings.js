@@ -2,7 +2,8 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import {withRouter} from "react-router";
 import {setForwardEmailHost, setForwardEmailPassword, setForwardEmailPort, setForwardEmailUsername, setForwardEnabled, setFramework, setIpAddress, setPort, setSrvResponseMessage, setSrvStatus, setUseNotification} from "../store/settingReducer";
-import {invoke, notification} from "@tauri-apps/api";
+import {invoke} from "@tauri-apps/api/core";
+import {isPermissionGranted, requestPermission, sendNotification} from "@tauri-apps/plugin-notification";
 
 class Settings extends Component {
 	constructor(props) {
@@ -237,21 +238,23 @@ class Settings extends Component {
 		}).catch()
 		setTimeout(() => {
 			if (this.props.srvStatus === true && this.props.useNotification === true) {
-				if (!notification.isPermissionGranted()) {
-					notification.requestPermission().then(response => {
-						if (response === 'granted') {
-							this.notify();
-						}
-					});
-				} else {
-					this.notify();
-				}
+				isPermissionGranted().then(granted => {
+					if (!granted) {
+						requestPermission().then(response => {
+							if (response === 'granted') {
+								this.notify();
+							}
+						});
+					} else {
+						this.notify();
+					}
+				});
 			}
 		}, 1000)
 	}
 	
 	notify() {
-		notification.sendNotification({
+		sendNotification({
 			title: "Mail-Dev: SMTP Connection",
 			body: "SMTP server started successfully",
 		})

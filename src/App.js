@@ -2,12 +2,13 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import {withRouter} from "react-router";
 import {listen} from "@tauri-apps/api/event";
+import {invoke} from "@tauri-apps/api/core";
+import {isPermissionGranted, requestPermission, sendNotification} from "@tauri-apps/plugin-notification";
 import Sidebar from "./components/Sidebar";
 import Mailbox from "./screens/Mailbox";
 import Settings from "./screens/Settings";
 import {Switch, Route, Redirect} from 'react-router-dom';
 import {addMail} from "./store/mailboxReducer";
-import {invoke, notification} from "@tauri-apps/api";
 
 class App extends Component {
 	componentDidMount() {
@@ -27,22 +28,24 @@ class App extends Component {
 			}
 			
 			if (this.props.useNotification === true) {
-				if (!notification.isPermissionGranted()) {
-					notification.requestPermission().then(response => {
-						if (response === 'granted') {
-							this.notify(res.payload.subject);
-						}
-					});
-				} else {
-					this.notify(res.payload.subject);
-				}
+				isPermissionGranted().then(granted => {
+					if (!granted) {
+						requestPermission().then(response => {
+							if (response === 'granted') {
+								this.notify(res.payload.subject);
+							}
+						});
+					} else {
+						this.notify(res.payload.subject);
+					}
+				});
 			}
 			
 		}).then().catch()
 	}
 	
 	notify(body = '') {
-		notification.sendNotification({
+		sendNotification({
 			title: "Mail-Dev: Mail Received",
 			body,
 		})
