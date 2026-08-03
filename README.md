@@ -18,9 +18,19 @@ Give it a try, [Download now](https://github.com/STIFLEUR390/mail-dev/releases).
 - [x] Attachment support
 - [x] Forward emails
 - [x] Notification
+- [x] Persistent configuration (SQLite)
+- [x] Windows support
 - [ ] Auto update
-- [ ] Persistent configuration
 - [ ] SMTP Authentication
+
+## Platforms
+
+- **Windows** (7/8/10/11) — NSIS installer (per-user), WebView2 installed automatically
+- **macOS** (10.15+) — universal .app/.dmg
+- **Linux** — .deb / .AppImage (WebKitGTK 4.1)
+
+> ℹ️ Persistent storage uses SQLite via `tauri-plugin-sql`. Mails and settings are
+> saved in `maildev.db` inside the app config directory and restored on launch.
 
 <img src="https://raw.githubusercontent.com/STIFLEUR390/mail-dev/main/screenshots/spam-score.png" alt="Mail-Dev SPAM SCORE"/>
 <br/>

@@ -1,4 +1,5 @@
 import {defineStore} from 'pinia';
+import {loadSettings} from './db';
 
 export const useSettingStore = defineStore('setting', {
   state: () => ({
@@ -18,6 +19,16 @@ export const useSettingStore = defineStore('setting', {
     useNotification: true,
   }),
   actions: {
+    async initFromDb() {
+      try {
+        const data = await loadSettings();
+        if (data) {
+          this.$patch(data);
+        }
+      } catch (err) {
+        console.warn('[settings] no persisted settings:', err);
+      }
+    },
     setSrvStatus(value) {
       this.srvStatus = value;
     },

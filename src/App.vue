@@ -15,6 +15,7 @@ import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-a
 import Sidebar from './components/Sidebar.vue';
 import {useMailboxStore} from './stores/mailbox';
 import {useSettingStore} from './stores/setting';
+import {initDb, saveSettings} from './stores/db';
 
 const mailbox = useMailboxStore();
 const setting = useSettingStore();
@@ -26,7 +27,19 @@ function notify(body = '') {
   });
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Load persisted data from SQLite (mails + settings), then keep settings in sync.
+  try {
+    await initDb();
+    await setting.initFromDb();
+    await mailbox.initFromDb();
+  } catch (err) {
+    console.warn('[app] persistence init failed:', err);
+  }
+  setting.$subscribe((_mutation, state) => {
+    saveSettings(state);
+  });
+
   listen("mail-received", (res) => {
     mailbox.addMail(res.payload);
 
