@@ -40,6 +40,26 @@
       "source": "nodnarbnitram/claude-code-extensions",
       "sourceType": "autoskills-registry",
       "computedHash": "2a14a5e08e521136f42265bf52cc297e49c5d877ecd4179b563ad85957bbbc07"
+    },
+    "vite": {
+      "source": "antfu/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "e0b52fe3ffea533e1e543ac8a8a20fccca3beed9f8bdc31a0934fe9f554439e8"
+    },
+    "vue-best-practices": {
+      "source": "antfu/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "1f369104c1aac5c101d71b65a2bd317ad2a1d3ceda160cb5d45da9b389a3f53f"
+    },
+    "vue-debug-guides": {
+      "source": "hyf0/vue-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "ef84274bb3af820e3ede22cb55863e6b0755eabe597713707ae9051a81ef3a02"
+    },
+    "vue-pinia-best-practices": {
+      "source": "vuejs-ai/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "57b87d5f058a5c51f0a0ff09e87e949bb1d5de3b4c9e8172c15a30a5d5713e88"
     }
   }
 }
