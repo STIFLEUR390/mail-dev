@@ -1,6 +1,6 @@
 {
   "name": "mail-dev",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "private": true,
   "dependencies": {
     "@phosphor-icons/vue": "^2.2.1",
