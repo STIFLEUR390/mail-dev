@@ -106,29 +106,29 @@
         <select v-model="framework"
                 class="mt-1 block w-full xl:w-96 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500/40 focus:border-gray-500 sm:text-sm rounded-md">
           <optgroup label="PHP">
-            <option>Laravel (11+)</option>
-            <option>Symfony (Mailer)</option>
+            <option>Laravel 13</option>
+            <option>Symfony 8</option>
             <option>WordPress</option>
-            <option>Yii Framework 3</option>
-            <option>PHPMailer</option>
+            <option>Yii 3</option>
+            <option>PHPMailer 7</option>
             <option>CodeIgniter 4</option>
           </optgroup>
           <optgroup label="JavaScript / Node.js">
-            <option>Nodemailer</option>
+            <option>Nodemailer 9</option>
           </optgroup>
           <optgroup label="Python">
-            <option>Django</option>
+            <option>Django 6</option>
             <option>Flask-Mail</option>
           </optgroup>
           <optgroup label="Ruby">
-            <option>Ruby on Rails</option>
+            <option>Ruby on Rails 8</option>
             <option>Ruby (net/smtp)</option>
           </optgroup>
           <optgroup label="Java / JVM">
-            <option>Spring Boot</option>
+            <option>Spring Boot 4</option>
           </optgroup>
           <optgroup label=".NET">
-            <option>ASP.NET Core</option>
+            <option>.NET 10 (ASP.NET Core)</option>
           </optgroup>
           <optgroup label="Go">
             <option>Go (net/smtp)</option>
@@ -141,9 +141,9 @@
         For Docker, use <span class="font-semibold font-mono">"host.docker.internal"</span> as your SMTP-Host.
       </p>
 
-      <div v-if="framework === 'Laravel (11+)'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-if="framework === 'Laravel 13'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          Use these configuration values in your Laravel application .env file:
+          Use these configuration values in your Laravel 13 application .env file (also valid for 11/12):
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
@@ -156,9 +156,9 @@ MAIL_ENCRYPTION=null` }}
         </code>
       </div>
 
-      <div v-else-if="framework === 'Symfony (Mailer)'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === 'Symfony 8'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          Symfony 6+ uses the Mailer component. Set the DSN in your .env file (SwiftMailer is deprecated):
+          Symfony 8 uses the Mailer component. Set the DSN in your .env file:
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
@@ -183,7 +183,7 @@ add_action('phpmailer_init', 'mail_dev');` }}
         </code>
       </div>
 
-      <div v-else-if="framework === 'Yii Framework 3'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === 'Yii 3'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
           Yii 3 uses yiisoft/mailer with the Symfony Mailer adapter. Configure the transport DSN in config/params.php:
         </p>
@@ -201,9 +201,9 @@ add_action('phpmailer_init', 'mail_dev');` }}
         </code>
       </div>
 
-      <div v-else-if="framework === 'PHPMailer'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === 'PHPMailer 7'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          Standalone PHP library (composer require phpmailer/phpmailer):
+          Standalone PHP library v7 (composer require phpmailer/phpmailer):
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
@@ -236,9 +236,9 @@ email.SMTPAuth = false` }}
         </code>
       </div>
 
-      <div v-else-if="framework === 'Nodemailer'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === 'Nodemailer 9'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          Nodemailer is an easy to use module to send e-mails with Node.JS:<br/>
+          Nodemailer 9 is an easy to use module to send e-mails with Node.JS:<br/>
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
@@ -258,9 +258,9 @@ await transport.sendMail({
         </code>
       </div>
 
-      <div v-else-if="framework === 'Django'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === 'Django 6'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          Add these settings to your settings.py:
+          Add these settings to your Django 6 settings.py:
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
@@ -284,9 +284,9 @@ app.config['MAIL_USE_SSL'] = False` }}
         </code>
       </div>
 
-      <div v-else-if="framework === 'Ruby on Rails'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === 'Ruby on Rails 8'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          In config/environments/*.rb specify ActionMailer defaults for your development or staging servers:
+          In config/environments/*.rb specify ActionMailer defaults for your development or staging servers (Rails 8):
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
@@ -324,9 +324,9 @@ end` }}
         </code>
       </div>
 
-      <div v-else-if="framework === 'Spring Boot'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === 'Spring Boot 4'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          Add these properties to application.properties:
+          Add these properties to your Spring Boot 4 application.properties:
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
@@ -339,9 +339,9 @@ spring.mail.properties.mail.smtp.starttls.enable=false` }}
         </code>
       </div>
 
-      <div v-else-if="framework === 'ASP.NET Core'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === '.NET 10 (ASP.NET Core)'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          Add this to appsettings.json, then use SmtpClient (System.Net.Mail):
+          Add this to appsettings.json, then use SmtpClient (System.Net.Mail, .NET 10):
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
