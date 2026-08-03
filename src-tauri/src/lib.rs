@@ -4,6 +4,11 @@ use forward::forward_mail;
 use smtp::{SmtpServerState, start_smtp_server, stop_smtp_server};
 use tauri_plugin_sql::{Migration, MigrationKind};
 
+// Public Sentry DSN (proxy HTTP de l'instance rustrak-api.applix.fr).
+// Surchargeable via la variable d'environnement SENTRY_DSN (ex. pour tester
+// contre une instance locale) ; une valeur vide désactive l'envoi.
+const SENTRY_DSN: &str = "http://d47885ba793546b6881e556350460f05@rustrak-api.applix.fr/3";
+
 fn migrations() -> Vec<Migration> {
   vec![
     Migration {
@@ -46,8 +51,30 @@ fn migrations() -> Vec<Migration> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  let client = sentry::init((
+    std::env::var("SENTRY_DSN")
+      .ok()
+      .filter(|dsn| !dsn.is_empty())
+      .unwrap_or_else(|| SENTRY_DSN.to_string()),
+    sentry::ClientOptions {
+      release: sentry::release_name!(),
+      auto_session_tracking: true,
+      ..Default::default()
+    },
+  ));
+
+  // Caution! Everything before here runs in both the app and the crash
+  // reporter processes (the crash reporter re-executes this binary).
+  #[cfg(not(target_os = "ios"))]
+  if let Err(e) = tauri_plugin_sentry::minidump::init(&client) {
+    // Crash reporting unavailable (e.g. crashpad handler not found) —
+    // Sentry still captures panics, logs and browser events.
+    eprintln!("[sentry] minidump disabled: {}", e);
+  }
+
   tauri::Builder::default()
     .manage(SmtpServerState::default())
+    .plugin(tauri_plugin_sentry::init(&client))
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_fs::init())

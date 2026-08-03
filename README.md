@@ -58,6 +58,10 @@ Give it a try, [Download now](https://github.com/STIFLEUR390/mail-dev/releases).
 > (the private key lives locally and in the GitHub secret
 > `TAURI_SIGNING_PRIVATE_KEY` — never commit it).
 
+> 📊 Error monitoring uses Sentry (`tauri-plugin-sentry` + `@sentry/browser` injected):
+> Rust panics, minidumps (native crashes) and frontend errors are merged and sent to
+> the configured DSN. Override with the `SENTRY_DSN` env var (empty disables sending).
+
 <img src="https://raw.githubusercontent.com/STIFLEUR390/mail-dev/main/screenshots/spam-score.png" alt="Mail-Dev SPAM SCORE"/>
 <br/>
 <img src="https://raw.githubusercontent.com/STIFLEUR390/mail-dev/main/screenshots/html-mail.png" alt="Mail-Dev HTML Mail"/>
