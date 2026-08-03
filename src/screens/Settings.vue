@@ -104,14 +104,35 @@
       <div>
         <h3 class="font-semibold mb-2">Framework configuration</h3>
         <select v-model="framework"
-                class="mt-1 block w-64 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500/40 focus:border-gray-500 sm:text-sm rounded-md">
-          <option>Laravel</option>
-          <option>Symfony</option>
-          <option>WordPress</option>
-          <option>Yii Framework</option>
-          <option>Nodemailer</option>
-          <option>Ruby on Rails</option>
-          <option>Ruby (net/smtp)</option>
+                class="mt-1 block w-full xl:w-96 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500/40 focus:border-gray-500 sm:text-sm rounded-md">
+          <optgroup label="PHP">
+            <option>Laravel (11+)</option>
+            <option>Symfony (Mailer)</option>
+            <option>WordPress</option>
+            <option>Yii Framework 3</option>
+            <option>PHPMailer</option>
+            <option>CodeIgniter 4</option>
+          </optgroup>
+          <optgroup label="JavaScript / Node.js">
+            <option>Nodemailer</option>
+          </optgroup>
+          <optgroup label="Python">
+            <option>Django</option>
+            <option>Flask-Mail</option>
+          </optgroup>
+          <optgroup label="Ruby">
+            <option>Ruby on Rails</option>
+            <option>Ruby (net/smtp)</option>
+          </optgroup>
+          <optgroup label="Java / JVM">
+            <option>Spring Boot</option>
+          </optgroup>
+          <optgroup label=".NET">
+            <option>ASP.NET Core</option>
+          </optgroup>
+          <optgroup label="Go">
+            <option>Go (net/smtp)</option>
+          </optgroup>
         </select>
       </div>
 
@@ -120,51 +141,98 @@
         For Docker, use <span class="font-semibold font-mono">"host.docker.internal"</span> as your SMTP-Host.
       </p>
 
-      <div v-if="framework === 'Laravel'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-if="framework === 'Laravel (11+)'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          Use these configuration values in your Laravel applications .env file:
+          Use these configuration values in your Laravel application .env file:
         </p>
 
-        <h4 class="py-1 font-semibold">For Laravel 7+:</h4>
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
-          {{ `MAIL_MAILER=smtp\nMAIL_HOST=${ipAddress}\nMAIL_PORT=${port}\nMAIL_USERNAME=null\nMAIL_PASSWORD=null\nMAIL_ENCRYPTION=null` }}
-        </code>
-
-        <h4 class="py-1 font-semibold">For Laravel 6 and below:</h4>
-        <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
-          {{ `MAIL_DRIVER=smtp\nMAIL_HOST=${ipAddress}\nMAIL_PORT=${port}\nMAIL_USERNAME=null\nMAIL_PASSWORD=null\nMAIL_ENCRYPTION=null` }}
+          {{ `MAIL_MAILER=smtp
+MAIL_HOST=${ipAddress}
+MAIL_PORT=${port}
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null` }}
         </code>
       </div>
 
-      <div v-else-if="framework === 'Symfony'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === 'Symfony (Mailer)'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          Symfony uses SwiftMailerBundle to send emails. You can find more information on how to send email on. <br/>
-          To get started you need to modify .env file in your project directory and set MAILER_URL value:
+          Symfony 6+ uses the Mailer component. Set the DSN in your .env file (SwiftMailer is deprecated):
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
-          {{ `MAILER_URL=smtp://${ipAddress}:${port}?encryption=null&auth_mode=null` }}
+          {{ `MAILER_DSN=smtp://${ipAddress}:${port}` }}
         </code>
       </div>
 
       <div v-else-if="framework === 'WordPress'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          You can configure your WordPress site to send mails to Mail-Dev by using :
+          You can configure your WordPress site to send mails to Mail-Dev by adding this to your theme's functions.php:
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
-          {{ `function mail_dev($phpmailer) {\n\t$phpmailer->isSMTP();\n\t$phpmailer->Host = '${ipAddress}';\n\t$phpmailer->SMTPAuth = false;\n\t$phpmailer->Port = ${port};\n}\n\nadd_action('phpmailer_init', 'mail_dev');` }}
+          {{ `function mail_dev($phpmailer) {
+	$phpmailer->isSMTP();
+	$phpmailer->Host = '${ipAddress}';
+	$phpmailer->SMTPAuth = false;
+	$phpmailer->Port = ${port};
+}
+
+add_action('phpmailer_init', 'mail_dev');` }}
         </code>
       </div>
 
-      <div v-else-if="framework === 'Yii Framework'" class="whitespace-pre-wrap text-sm text-gray-600">
+      <div v-else-if="framework === 'Yii Framework 3'" class="whitespace-pre-wrap text-sm text-gray-600">
         <p class="py-2 text-sm text-gray-600">
-          You can find documentation for sending emails using SMTP in Yii Framework here. <br/>
-          In your config file add:
+          Yii 3 uses yiisoft/mailer with the Symfony Mailer adapter. Configure the transport DSN in config/params.php:
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
-          {{ `'components' => [\n\t'mailer' => [\n\t\t'class' => 'yii\\swiftmailer\\Mailer',\n\t\t'enableSwiftMailerLogging' => true,\n\t\t'transport' => [\n\t\t\t'class' => 'Swift_SmtpTransport',\n\t\t\t"host" => '${ipAddress}',\n\t\t\t"port" => ${port},\n\t\t],\n\t],\n],` }}
+          {{ `return [
+	'yiisoft/mailer' => [
+		'mailer' => [
+			'transport' => [
+				'dsn' => 'smtp://${ipAddress}:${port}',
+			],
+		],
+	],
+];` }}
+        </code>
+      </div>
+
+      <div v-else-if="framework === 'PHPMailer'" class="whitespace-pre-wrap text-sm text-gray-600">
+        <p class="py-2 text-sm text-gray-600">
+          Standalone PHP library (composer require phpmailer/phpmailer):
+        </p>
+
+        <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
+          {{ `<?php
+require 'vendor/autoload.php';
+
+$mail = new PHPMailer\PHPMailer\PHPMailer(true);
+$mail->isSMTP();
+$mail->Host = '${ipAddress}';
+$mail->SMTPAuth = false;
+$mail->Port = ${port};
+$mail->setFrom('from@example.com');
+$mail->addAddress('to@example.com');
+$mail->Subject = 'Test';
+$mail->Body = 'Hello from Mail-Dev!';
+$mail->send();` }}
+        </code>
+      </div>
+
+      <div v-else-if="framework === 'CodeIgniter 4'" class="whitespace-pre-wrap text-sm text-gray-600">
+        <p class="py-2 text-sm text-gray-600">
+          Add these values to your .env file:
+        </p>
+
+        <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
+          {{ `email.protocol = smtp
+email.SMTPHost = ${ipAddress}
+email.SMTPPort = ${port}
+email.SMTPAuth = false` }}
         </code>
       </div>
 
@@ -174,7 +242,45 @@
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
-          {{ `let transport = nodemailer.createTransport({\n\thost: "${ipAddress}",\n\tport: ${port},\n});` }}
+          {{ `import nodemailer from 'nodemailer';
+
+const transport = nodemailer.createTransport({
+	host: "${ipAddress}",
+	port: ${port},
+});
+
+await transport.sendMail({
+	from: 'from@example.com',
+	to: 'to@example.com',
+	subject: 'Test',
+	text: 'Hello from Mail-Dev!',
+});` }}
+        </code>
+      </div>
+
+      <div v-else-if="framework === 'Django'" class="whitespace-pre-wrap text-sm text-gray-600">
+        <p class="py-2 text-sm text-gray-600">
+          Add these settings to your settings.py:
+        </p>
+
+        <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
+          {{ `EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = '${ipAddress}'
+EMAIL_PORT = ${port}
+EMAIL_USE_TLS = False` }}
+        </code>
+      </div>
+
+      <div v-else-if="framework === 'Flask-Mail'" class="whitespace-pre-wrap text-sm text-gray-600">
+        <p class="py-2 text-sm text-gray-600">
+          Add these settings to your Flask app config (pip install Flask-Mail):
+        </p>
+
+        <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
+          {{ `app.config['MAIL_SERVER'] = '${ipAddress}'
+app.config['MAIL_PORT'] = ${port}
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = False` }}
         </code>
       </div>
 
@@ -184,7 +290,12 @@
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
-          {{ `config.action_mailer.delivery_method = :smtp \nconfig.action_mailer.smtp_settings = {\n\t:address => '${ipAddress}',\n\t:domain => '${ipAddress}',\n\t:port => '${port}',\n}` }}
+          {{ `config.action_mailer.delivery_method = :smtp 
+config.action_mailer.smtp_settings = {
+	:address => '${ipAddress}',
+	:domain => '${ipAddress}',
+	:port => '${port}',
+}` }}
         </code>
       </div>
 
@@ -194,60 +305,84 @@
         </p>
 
         <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
-          {{ `require 'net/smtp'\n\nmessage = <<-END.split("\n").map!(&:strip).join("\n")\nFrom: Private Person <from@${ipAddress}>\nTo: A Test User <to@${ipAddress}>\nSubject: MAIL-DEV!\n\nThis is a test e-mail message from MAIL-DEV.\nEND\n\nNet::SMTP.start('${ipAddress}',\n              ${port},\n              '${ipAddress}') do |smtp|\nsmtp.send_message message, 'from@${ipAddress}',\n                           'to@${ipAddress}'\nend` }}
+          {{ `require 'net/smtp'
+
+message = <<-END.split("\n").map!(&:strip).join("\n")
+From: Private Person <from@${ipAddress}>
+To: A Test User <to@${ipAddress}>
+Subject: MAIL-DEV!
+
+This is a test e-mail message from MAIL-DEV.
+END
+
+Net::SMTP.start('${ipAddress}',
+              ${port},
+              '${ipAddress}') do |smtp|
+smtp.send_message message, 'from@${ipAddress}',
+                           'to@${ipAddress}'
+end` }}
         </code>
       </div>
+
+      <div v-else-if="framework === 'Spring Boot'" class="whitespace-pre-wrap text-sm text-gray-600">
+        <p class="py-2 text-sm text-gray-600">
+          Add these properties to application.properties:
+        </p>
+
+        <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
+          {{ `spring.mail.host=${ipAddress}
+spring.mail.port=${port}
+spring.mail.username=
+spring.mail.password=
+spring.mail.properties.mail.smtp.auth=false
+spring.mail.properties.mail.smtp.starttls.enable=false` }}
+        </code>
+      </div>
+
+      <div v-else-if="framework === 'ASP.NET Core'" class="whitespace-pre-wrap text-sm text-gray-600">
+        <p class="py-2 text-sm text-gray-600">
+          Add this to appsettings.json, then use SmtpClient (System.Net.Mail):
+        </p>
+
+        <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
+          {{ `"Smtp": {
+  "Host": "${ipAddress}",
+  "Port": ${port}
+}` }}
+        </code>
+        <p class="py-2 text-sm text-gray-600">
+          C# example:
+        </p>
+        <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
+          {{ `using var client = new SmtpClient("${ipAddress}", ${port});
+await client.SendMailAsync("from@example.com",
+    "to@example.com", "Test", "Hello from Mail-Dev!");` }}
+        </code>
+      </div>
+
+      <div v-else-if="framework === 'Go (net/smtp)'" class="whitespace-pre-wrap text-sm text-gray-600">
+        <p class="py-2 text-sm text-gray-600">
+          Send mail using the standard library:
+        </p>
+
+        <code class="font-mono mb-2 block bg-gray-900 shadow-inner rounded-md p-2 text-gray-300">
+          {{ `package main
+
+import (
+	"net/smtp"
+)
+
+func main() {
+	msg := "To: to@example.com\r\n" +
+		"Subject: Test\r\n" +
+		"\r\n" +
+		"Hello from Mail-Dev!"
+	smtp.SendMail("${ipAddress}:${port}", nil,
+		"from@example.com", []string{"to@example.com"}, []byte(msg))
+}` }}
+        </code>
+      </div>
+
     </div>
   </div>
 </template>
-
-<script setup>
-import {storeToRefs} from 'pinia';
-import {invoke} from '@tauri-apps/api/core';
-import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-apps/plugin-notification';
-import {useSettingStore} from '../stores/setting';
-
-const setting = useSettingStore();
-const {
-  ipAddress,
-  port,
-  framework,
-  forwardEmailHost,
-  forwardEmailPort,
-  forwardEmailUsername,
-  forwardEmailPassword,
-} = storeToRefs(setting);
-
-function notify() {
-  sendNotification({
-    title: "Mail-Dev: SMTP Connection",
-    body: "SMTP server started successfully",
-  });
-}
-
-function startServer() {
-  setting.setSrvStatus(true);
-  setting.setSrvResponseMessage("");
-  invoke("start_smtp_server", {address: `${setting.ipAddress}:${setting.port}`}).then(response => {
-    if (response.length > 0) {
-      setting.setSrvStatus(false);
-      setting.setSrvResponseMessage(response);
-    }
-  }).catch();
-  setTimeout(() => {
-    if (setting.srvStatus === true && setting.useNotification === true) {
-      isPermissionGranted().then(granted => {
-        if (!granted) {
-          requestPermission().then(response => {
-            if (response === 'granted') {
-              notify();
-            }
-          });
-        } else {
-          notify();
-        }
-      });
-    }
-  }, 1000);
-}
-</script>

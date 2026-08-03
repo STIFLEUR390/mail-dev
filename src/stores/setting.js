@@ -4,7 +4,7 @@ export const useSettingStore = defineStore('setting', {
   state: () => ({
     srvStatus: false,
     srvResponseMessage: "",
-    framework: "Laravel",
+    framework: "Laravel (11+)",
     ipAddress: "127.0.0.1",
     port: 2525,
     spamChecking: true,
