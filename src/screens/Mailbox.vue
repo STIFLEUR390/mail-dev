@@ -26,14 +26,29 @@
   <div v-else class="flex h-full">
     <!-- List -->
     <div class="h-full flex-shrink-0 w-64 lg:w-80 xl:w-96 border-r border-zinc-200 dark:border-zinc-800 scroll overflow-y-auto">
-      <div class="py-2 px-2 flex items-center justify-end border-b border-zinc-200 dark:border-zinc-800">
+      <div class="py-2 px-2 flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800">
+        <div class="relative flex-1 min-w-0">
+          <PhMagnifyingGlass :size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 pointer-events-none"/>
+          <input v-model="mailbox.searchQuery" type="text" :placeholder="t('mailbox.searchPlaceholder')" :aria-label="t('mailbox.searchPlaceholder')"
+                 class="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md pl-8 pr-7 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition-colors"/>
+          <button v-if="mailbox.searchQuery" @click="mailbox.searchQuery = ''" :aria-label="t('mailbox.clearSearch')"
+                  class="absolute right-1.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer">
+            <PhX :size="14"/>
+          </button>
+        </div>
         <button @click="clearAllMails" :aria-label="t('mailbox.deleteAll')"
-                class="flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                class="flex items-center gap-x-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors flex-shrink-0">
           <PhTrash :size="16"/>
           {{ t('mailbox.deleteAll') }}
         </button>
       </div>
-      <div v-for="mail in mailbox.mails" :key="mail.key">
+      <div v-if="mailbox.filteredMails.length === 0" class="flex flex-col items-center justify-center h-40 px-4 text-center">
+        <div class="text-zinc-300 dark:text-zinc-700 mb-2">
+          <PhMagnifyingGlass :size="28" weight="light"/>
+        </div>
+        <div class="text-sm text-zinc-500 dark:text-zinc-400">{{ t('mailbox.noResults') }}</div>
+      </div>
+      <div v-for="mail in mailbox.filteredMails" :key="mail.key">
         <div :class="mailRowClass(mail)" @click="selectMail(mail)">
           <div :class="`h-2 w-2 flex-shrink-0 rounded-full mr-2.5 mt-1 ${unreadDotClass(mail)}`"></div>
           <div :class="`w-full py-1 min-w-0 ${rowTextClass(mail)}`">
@@ -41,7 +56,7 @@
             <div class="text-xs truncate opacity-70">{{ mail.to }}</div>
           </div>
 
-          <PhPaperclip v-if="mail.attachments.length > 0" :size="16" :class="`flex-shrink-0 ${mail.key === mailbox.mailIndex ? 'text-zinc-100' : 'text-zinc-400 dark:text-zinc-500'}`"/>
+          <PhPaperclip v-if="(mail.attachments || []).length > 0" :size="16" :class="`flex-shrink-0 ${mail.key === mailbox.mailIndex ? 'text-zinc-100' : 'text-zinc-400 dark:text-zinc-500'}`"/>
 
           <PhCaretRight :size="12" :class="`flex-shrink-0 ml-1.5 ${mail.key === mailbox.mailIndex ? 'text-zinc-100' : 'text-zinc-400 dark:text-zinc-600'}`"/>
         </div>
@@ -67,7 +82,7 @@
         </div>
       </div>
 
-      <div v-if="mailbox.mail.attachments.length > 0" class="border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900 px-4 py-2 mb-2 mt-4">
+      <div v-if="(mailbox.mail.attachments || []).length > 0" class="border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900 px-4 py-2 mb-2 mt-4">
         <div v-for="(attachment, key) in mailbox.mail.attachments" :key="key" @click="saveAttachment(attachment)">
           <div class="flex w-full items-center gap-2 py-1.5 cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
             <PhPaperclip :size="16" class="flex-shrink-0"/>
@@ -111,8 +126,9 @@
 <script setup>
 import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import {useI18n} from 'vue-i18n';
-import {PhEnvelopeSimpleOpen, PhPaperclip, PhCaretRight, PhTrash} from '@phosphor-icons/vue';
+import {PhEnvelopeSimpleOpen, PhPaperclip, PhCaretRight, PhTrash, PhMagnifyingGlass, PhX} from '@phosphor-icons/vue';
 import {fetch} from '@tauri-apps/plugin-http';
+import {invoke} from '@tauri-apps/api/core';
 import {ask, save} from '@tauri-apps/plugin-dialog';
 import {writeFile} from '@tauri-apps/plugin-fs';
 import MailContent from '../components/MailContent.vue';
@@ -204,15 +220,26 @@ function onKeydown(e) {
     e.preventDefault();
     deleteSelected();
   }
-  if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && mailbox.mails.length > 0) {
-    const idx = mailbox.mails.findIndex(m => m.key === mailbox.mailIndex);
+  if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && mailbox.filteredMails.length > 0) {
+    const idx = mailbox.filteredMails.findIndex(m => m.key === mailbox.mailIndex);
     const next = e.key === 'ArrowDown' ? idx + 1 : idx - 1;
-    if (idx !== -1 && next >= 0 && next < mailbox.mails.length) {
+    if (idx !== -1 && next >= 0 && next < mailbox.filteredMails.length) {
       e.preventDefault();
-      selectMail(mailbox.mails[next]);
+      selectMail(mailbox.filteredMails[next]);
     }
   }
 }
+
+// When the active search filters the selected mail out of the list, drop the
+// selection so the detail pane never shows a mail that is not listed.
+watch(
+  () => mailbox.filteredMails,
+  (list) => {
+    if (mailbox.mailIndex !== null && !list.some(m => m.key === mailbox.mailIndex)) {
+      mailbox.clearSelection();
+    }
+  }
+);
 
 onMounted(() => window.addEventListener('keydown', onKeydown));
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
@@ -245,16 +272,27 @@ function getSpamScore(mail) {
 }
 
 async function saveAttachment(attachment) {
-  let path = await save({
+  const dest = await save({
     defaultPath: attachment[0],
     filters: [{name: t('mailbox.saveAttachment'), extensions: []}]
   });
 
-  if (path !== null) {
-    if (attachment[2] === null) {
-      await writeFile(path, attachment[3]);
-    } else {
-      await writeFile(path, attachment[2]);
+  if (dest !== null) {
+    const text = attachment[2];
+    const data = attachment[3];
+    try {
+      if (text !== null) {
+        // Text attachment: stored inline, write directly.
+        await writeFile(dest, text);
+      } else if (typeof data === 'string') {
+        // Binary attachment persisted on disk by the Rust backend.
+        await invoke('export_attachment', {relativePath: data, destination: dest});
+      } else if (Array.isArray(data)) {
+        // Legacy mail: binary stored inline in SQLite.
+        await writeFile(dest, new Uint8Array(data));
+      }
+    } catch (err) {
+      console.error('[mailbox] failed to save attachment:', err);
     }
   }
 }

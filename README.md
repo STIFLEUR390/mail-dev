@@ -37,9 +37,9 @@ Give it a try, [Download now](https://github.com/STIFLEUR390/mail-dev/releases).
 - [x] Settings persistence debouncing
 - [x] Rust tests (cargo test: parsing + SMTP lifecycle)
 - [x] CI: fmt, clippy, tests, build
-- [ ] Search / filter mails in the mailbox
-- [ ] Attachment storage outside SQLite (disk / BLOBs)
-- [ ] Frontend tests (Vitest + Vue Test Utils)
+- [x] Search / filter mails in the mailbox
+- [x] Attachment storage outside SQLite (disk / BLOBs)
+- [x] Frontend tests (Vitest + Vue Test Utils)
 
 > 📋 Full analysis & prioritized improvement list: [docs/improvements.md](docs/improvements.md)
 

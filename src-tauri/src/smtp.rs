@@ -4,7 +4,8 @@ use mailparse::body::Body;
 use mailparse::*;
 use std::io::{BufRead, Write};
 use std::net::{IpAddr, Ipv4Addr, TcpListener, TcpStream};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::path::{Component, Path, PathBuf};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -23,8 +24,136 @@ struct Payload {
   attachments: Vec<Attachment>,
 }
 
-/// (filename, content_type, text_content, binary_content)
-type Attachment = (String, String, Option<String>, Option<Vec<u8>>);
+/// Binary attachment payload. Kept in memory (`Inline`) during parsing, then
+/// written to disk (`OnDisk`) before the mail is emitted to the frontend, so
+/// SQLite only stores a relative path instead of base64 blobs.
+#[derive(Clone, Debug, serde::Serialize, PartialEq)]
+#[serde(untagged)]
+enum AttachmentData {
+  /// Raw binary kept in memory (parse-time, or fallback if disk write fails).
+  Inline(Vec<u8>),
+  /// File stored under the app data dir; path is relative to the app data dir.
+  OnDisk(String),
+}
+
+/// (filename, content_type, text_content, binary-or-disk data)
+type Attachment = (String, String, Option<String>, Option<AttachmentData>);
+
+// Monotonic counter so two mails received in the same nanosecond never share
+// a directory.
+static ATTACHMENT_SEQ: AtomicU64 = AtomicU64::new(0);
+
+/// Keep only the final path component so a hostile MIME filename cannot escape
+/// the attachment directory (path traversal). Falls back to "attachment.bin".
+fn sanitize_filename(filename: &str) -> String {
+  let name = Path::new(filename)
+    .file_name()
+    .map(|s| s.to_string_lossy().into_owned())
+    .unwrap_or_default();
+  if name.is_empty() || name == "." || name == ".." {
+    "attachment.bin".to_string()
+  } else {
+    name
+  }
+}
+
+/// True if `relative` stays inside the "attachments/" tree (no parent-dir
+/// components), i.e. a path we generated ourselves.
+fn is_safe_attachment_rel(relative: &str) -> bool {
+  let path = Path::new(relative);
+  path.starts_with("attachments") && !path.components().any(|c| matches!(c, Component::ParentDir))
+}
+
+/// Write every in-memory attachment to `<base_dir>/attachments/m-<stamp>-<seq>/`
+/// and swap `Inline(bytes)` for `OnDisk(relative_path)` in the payload.
+/// Pure (no Tauri runtime) so it is unit-testable.
+fn persist_attachments_to_dir(base_dir: &Path, payload: &mut Payload) -> Result<(), String> {
+  let has_binary = payload
+    .attachments
+    .iter()
+    .any(|a| matches!(&a.3, Some(AttachmentData::Inline(_))));
+  if !has_binary {
+    return Ok(());
+  }
+
+  let attachments_dir = base_dir.join("attachments");
+  std::fs::create_dir_all(&attachments_dir).map_err(|e| e.to_string())?;
+
+  let stamp = std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .map(|d| d.as_nanos())
+    .unwrap_or(0);
+  let seq = ATTACHMENT_SEQ.fetch_add(1, Ordering::Relaxed);
+  let mail_dir = attachments_dir.join(format!("m-{}-{}", stamp, seq));
+  std::fs::create_dir_all(&mail_dir).map_err(|e| e.to_string())?;
+
+  for (filename, _content_type, _text, data) in payload.attachments.iter_mut() {
+    if let Some(AttachmentData::Inline(bytes)) = data.take() {
+      let safe = sanitize_filename(filename);
+      let relative = format!("attachments/m-{}-{}/{}", stamp, seq, safe);
+      match std::fs::write(mail_dir.join(&safe), &bytes) {
+        Ok(_) => *data = Some(AttachmentData::OnDisk(relative)),
+        Err(e) => eprintln!("[smtp] failed to persist attachment '{}': {}", filename, e),
+      }
+    }
+  }
+  Ok(())
+}
+
+/// Resolve the app data dir and persist attachments there (best effort).
+fn persist_attachments<R: tauri::Runtime>(payload: &mut Payload, app: &AppHandle<R>) {
+  let base = match app.path().app_data_dir() {
+    Ok(dir) => dir,
+    Err(e) => {
+      eprintln!(
+        "[smtp] cannot resolve app data dir, keeping attachments in memory: {}",
+        e
+      );
+      return;
+    }
+  };
+  if let Err(e) = persist_attachments_to_dir(&base, payload) {
+    eprintln!("[smtp] failed to persist attachments to disk: {}", e);
+  }
+}
+
+/// Export an on-disk attachment to a user-chosen destination (from the save
+/// dialog). Returns "" on success, or an error message to display.
+#[tauri::command]
+pub fn export_attachment(
+  app: AppHandle,
+  relative_path: String,
+  destination: String,
+) -> Result<String, String> {
+  if !is_safe_attachment_rel(&relative_path) {
+    return Err("invalid attachment path".to_string());
+  }
+  let base = app.path().app_data_dir().map_err(|e| e.to_string())?;
+  let source: PathBuf = base.join(&relative_path);
+  if !source.is_file() {
+    return Err(format!("attachment not found: {}", relative_path));
+  }
+  std::fs::copy(&source, Path::new(&destination)).map_err(|e| e.to_string())?;
+  Ok(String::new())
+}
+
+/// Best-effort removal of attachment files (and their now-empty mail dirs)
+/// when a mail is deleted or the mailbox is cleared.
+#[tauri::command]
+pub fn delete_attachment_files(app: AppHandle, paths: Vec<String>) -> Result<String, String> {
+  let base = app.path().app_data_dir().map_err(|e| e.to_string())?;
+  for relative in paths {
+    if !is_safe_attachment_rel(&relative) {
+      continue;
+    }
+    let full = base.join(&relative);
+    let _ = std::fs::remove_file(&full);
+    if let Some(parent) = full.parent() {
+      let _ = std::fs::remove_dir(parent);
+    }
+  }
+  Ok(String::new())
+}
 
 /// Tauri-managed state holding the running SMTP server (if any).
 #[derive(Default)]
@@ -273,7 +402,10 @@ fn handle_connection<R: tauri::Runtime>(
 // Parse the mail content and emit it to the webview. Never panics on bad input.
 fn handle_incoming_mail<R: tauri::Runtime>(raw: Vec<u8>, app: &AppHandle<R>) {
   match parse_mail_payload(&raw) {
-    Ok(payload) => {
+    Ok(mut payload) => {
+      // Move attachment binaries out of the event payload and onto disk so
+      // SQLite only stores relative paths.
+      persist_attachments(&mut payload, app);
       if let Some(win) = app.get_webview_window("main")
         && let Err(e) = win.emit("mail-received", payload)
       {
@@ -354,9 +486,12 @@ fn extract_parts(parsed: ParsedMail, payload: &mut Payload) {
 
       match parsed.get_body_encoded() {
         Body::Base64(body) => match body.get_decoded() {
-          Ok(binary) => payload
-            .attachments
-            .push((filename, content_type, None, Some(binary))),
+          Ok(binary) => payload.attachments.push((
+            filename,
+            content_type,
+            None,
+            Some(AttachmentData::Inline(binary)),
+          )),
           Err(e) => eprintln!("[smtp] failed to decode attachment '{}': {}", filename, e),
         },
         _ => {
@@ -425,11 +560,72 @@ AAECAw==\r\n\
     assert_eq!(payload.text, "Body text");
     assert!(payload.html.contains("<b>Body</b>"));
     assert_eq!(payload.attachments.len(), 1);
-    let (name, ctype, text, binary) = &payload.attachments[0];
+    let (name, ctype, text, data) = &payload.attachments[0];
     assert_eq!(name, "data.bin");
     assert!(ctype.contains("octet-stream"));
     assert!(text.is_none());
-    assert_eq!(binary.as_deref(), Some(&[0x00, 0x01, 0x02, 0x03][..]));
+    assert_eq!(
+      data.as_ref(),
+      Some(&AttachmentData::Inline(vec![0x00, 0x01, 0x02, 0x03]))
+    );
+  }
+
+  #[test]
+  fn binary_attachments_are_persisted_to_disk_and_swapped_for_paths() {
+    let mut payload =
+      parse_mail_payload(MULTIPART_MAIL.as_bytes()).expect("multipart mail should parse");
+    assert!(matches!(
+      payload.attachments[0].3,
+      Some(AttachmentData::Inline(_))
+    ));
+
+    let base = std::env::temp_dir().join(format!("maildev-test-{}", std::process::id()));
+    persist_attachments_to_dir(&base, &mut payload).expect("persist should succeed");
+
+    let relative = match payload.attachments[0].3.clone() {
+      Some(AttachmentData::OnDisk(path)) => path,
+      other => panic!("expected an on-disk path, got {:?}", other),
+    };
+    assert!(
+      relative.starts_with("attachments/"),
+      "path must stay under attachments/: {}",
+      relative
+    );
+    let full = base.join(&relative);
+    assert_eq!(
+      std::fs::read(&full).expect("attachment file should exist on disk"),
+      vec![0x00, 0x01, 0x02, 0x03]
+    );
+
+    // Cleanup the temp tree.
+    let _ = std::fs::remove_dir_all(&base);
+  }
+
+  #[test]
+  fn persist_attachments_is_a_noop_without_binary_data() {
+    let mut payload = parse_mail_payload(SIMPLE_MAIL.as_bytes()).expect("simple mail should parse");
+    let base = std::env::temp_dir().join(format!("maildev-test-{}", std::process::id()));
+    persist_attachments_to_dir(&base, &mut payload).expect("noop persist should succeed");
+    assert!(!base.join("attachments").exists());
+  }
+
+  #[test]
+  fn sanitize_filename_strips_directory_components() {
+    assert_eq!(sanitize_filename("../../etc/passwd"), "passwd");
+    assert_eq!(sanitize_filename("a/b/c.txt"), "c.txt");
+    assert_eq!(sanitize_filename("report.pdf"), "report.pdf");
+    assert_eq!(sanitize_filename(""), "attachment.bin");
+    assert_eq!(sanitize_filename("."), "attachment.bin");
+    assert_eq!(sanitize_filename(".."), "attachment.bin");
+  }
+
+  #[test]
+  fn attachment_path_guard_rejects_traversal() {
+    assert!(is_safe_attachment_rel("attachments/m-1-2/data.bin"));
+    assert!(!is_safe_attachment_rel("../attachments/x.bin"));
+    assert!(!is_safe_attachment_rel("attachments/../x.bin"));
+    assert!(!is_safe_attachment_rel("/etc/passwd"));
+    assert!(!is_safe_attachment_rel(""));
   }
 
   #[test]

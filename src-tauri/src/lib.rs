@@ -1,7 +1,9 @@
 mod forward;
 mod smtp;
 use forward::forward_mail;
-use smtp::{SmtpServerState, start_smtp_server, stop_smtp_server};
+use smtp::{
+  SmtpServerState, delete_attachment_files, export_attachment, start_smtp_server, stop_smtp_server,
+};
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 // Public Sentry DSN (proxy HTTPS de l'instance rustrak-api.applix.fr).
@@ -95,7 +97,9 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       start_smtp_server,
       stop_smtp_server,
-      forward_mail
+      forward_mail,
+      export_attachment,
+      delete_attachment_files
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

@@ -1,4 +1,5 @@
 import Database from '@tauri-apps/plugin-sql';
+import {invoke} from '@tauri-apps/api/core';
 
 // SQLite persistence layer (tauri-plugin-sql).
 // All functions are safe to call outside a Tauri runtime (e.g. plain browser
@@ -131,4 +132,26 @@ export async function updateMailSpam(key, spam_score, spam_rules) {
       [spam_score || '', JSON.stringify(spam_rules || []), key]
     );
   });
+}
+
+// ---------- Attachment files (stored on disk, outside SQLite) ----------
+
+// Attachment tuples are (filename, content_type, text_content, data) where
+// `data` is either null (text attachment), an inline byte array (legacy mails)
+// or a relative on-disk path managed by the Rust backend.
+function attachmentPathsFrom(mails) {
+  return (mails || [])
+    .flatMap(m => (m.attachments || []).map(a => a[3]))
+    .filter(p => typeof p === 'string' && p.startsWith('attachments/'));
+}
+
+// Best-effort cleanup of the on-disk attachment files of deleted mails.
+export async function deleteAttachmentFiles(mails) {
+  const paths = attachmentPathsFrom(mails);
+  if (paths.length === 0) return;
+  try {
+    await invoke('delete_attachment_files', {paths});
+  } catch (err) {
+    console.warn('[db] failed to delete attachment files:', err);
+  }
 }

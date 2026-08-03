@@ -41,6 +41,9 @@ export const en = {
     confirmDelete: 'Delete this mail?',
     saveAttachment: 'Save Attachment.',
     spamReportsTab: 'Spam Reports',
+    searchPlaceholder: 'Search mails…',
+    clearSearch: 'Clear search',
+    noResults: 'No mails match your search.',
   },
   mailContent: {
     previewTitle: 'Letter preview',
@@ -140,6 +143,9 @@ export const fr = {
     confirmDelete: 'Supprimer ce courriel ?',
     saveAttachment: 'Enregistrer la pièce jointe.',
     spamReportsTab: 'Rapports de spam',
+    searchPlaceholder: 'Rechercher un courriel…',
+    clearSearch: 'Effacer la recherche',
+    noResults: 'Aucun courriel ne correspond à votre recherche.',
   },
   mailContent: {
     previewTitle: 'Aperçu du courriel',

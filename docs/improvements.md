@@ -238,8 +238,9 @@ Créer `.github/workflows/ci.yml` déclenché sur `push`/`pull_request` :
 ## 7. Checklist récapitulative
 
 > ✅ État au 2026-02-16 : tout le bloc 🔴 et la quasi-totalité du bloc 🟠 ont été
-> implémentés dans la version **0.8.0**. Restent en attente : 3.9 (pièces jointes
-> hors SQLite), la recherche de mails, et les tests frontend (Vitest).
+> implémentés dans la version **0.8.0**. Depuis, la roadmap README est terminée :
+> 3.9 (pièces jointes sur disque, hors SQLite), la recherche de mails, et les
+> tests frontend (Vitest) sont implémentés.
 
 ### 🔴 Priorité haute (sécurité / stabilité)
 - [x] 2.1 Supprimer le singleton `unsafe` (`window.rs` — fichier supprimé, `AppHandle` injecté)
@@ -259,7 +260,11 @@ Créer `.github/workflows/ci.yml` déclenché sur `push`/`pull_request` :
 - [x] 3.6 Forward : `Result<String, String>` + timeout 10 s + retour visuel (console)
 - [x] 3.7 Migrations SQLite (ajout du `Down` de la v1)
 - [x] 3.8 Raccourcis clavier (Delete, ↑/↓) + confirmations de suppression (`ask`)
-- [ ] 3.9 Pièces jointes sur disque / BLOB — **en attente** (migration de schéma)
+- [ ] 3.9 Pièces jointes sur disque / BLOB — **fait (v0.10)** : binaires écrits sur disque
+  (`<app_data>/attachments/…`) côté Rust avant émission de l'événement ; SQLite ne stocke
+  plus que des chemins relatifs + métadonnées. Nouvelles commandes `export_attachment`
+  et `delete_attachment_files` (nettoyage à la suppression). Texte des pièces jointes
+  conservé inline (petites tailles). Migration de schéma non nécessaire.
 - [x] 3.10 `manualChunks` Vite — fait avec 3.5
 - [x] 3.11 Confirmations UI (delete all/delete) — fait avec 3.8
 
@@ -268,4 +273,7 @@ Créer `.github/workflows/ci.yml` déclenché sur `push`/`pull_request` :
 - [x] 4.2 Workflow CI (`ci.yml` : build frontend, fmt, clippy, tests)
 - [x] 4.3 Métadonnées Cargo + `edition 2024` + description/copyright du bundle
 - [x] 6.1 README : Node 20.19+ / docs sync — fait avant l'implémentation
-- [ ] 3.9b / Frontend : tests Vitest — **en attente** (nouveaux packages, cf. section 5)
+- [ ] 3.9b / Frontend : tests Vitest — **fait (v0.10)** : `vitest` + `@vue/test-utils` + `jsdom`,
+  config dans `vite.config.mjs` (`test`), mocks Tauri dans `src/test/setup.js`.
+  30 tests : store mailbox (dont recherche/filtre), store setting, SwitchToggle,
+  écran Mailbox (recherche UI, états vide/sans résultat, suppression). CI étendue.
