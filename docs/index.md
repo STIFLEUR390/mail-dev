@@ -4,7 +4,7 @@
 
 ### Local SMTP Server For Email Testing/Debugging
 
-Built on top of [React](https://reactjs.org/) and [Tauri](https://tauri.studio/en).
+Built on top of [React](https://reactjs.org/), [Vite](https://vite.dev/) and [Tauri](https://v2.tauri.app/).
 
 ---
 
@@ -26,19 +26,17 @@ Give it a try, [Download now](https://github.com/STIFLEUR390/mail-dev/releases).
 <img src="https://raw.githubusercontent.com/STIFLEUR390/mail-dev/main/screenshots/setting.png" alt="Mail-Dev SETTING"/>
 
 ## Requirement:
-- Tauri CLI
-- NodeJS (npm/yarn)
+- Tauri CLI v2
+- NodeJS 18+ (npm/yarn) or [Bun](https://bun.sh)
 
 ### Dev
 ```text
-npm install
-npm run tailwind:dev
-npm run tauri dev
+bun install
+bun run tauri dev
 ```
 
 ### Build
 ```text
-npm install
-npm run tailwind:dev
-npm run tauri build
+bun install
+bun run tauri build
 ```
